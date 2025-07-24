@@ -1,91 +1,108 @@
-from django.utils.translation import gettext_lazy as _
-
+"""
+Research app events for audit trail and tracking.
+"""
 from mayan.apps.events.classes import EventTypeNamespace
 
 namespace = EventTypeNamespace(
-    label=_('Research'), name='research'
+    label='Research Platform', name='research'
 )
 
 # Project events
 event_project_created = namespace.add_event_type(
-    label=_('Project created'), name='project_created'
+    label='Project created', name='project_created'
 )
 event_project_edited = namespace.add_event_type(
-    label=_('Project edited'), name='project_edited'
+    label='Project edited', name='project_edited'
 )
 event_project_deleted = namespace.add_event_type(
-    label=_('Project deleted'), name='project_deleted'
+    label='Project deleted', name='project_deleted'
+)
+event_project_viewed = namespace.add_event_type(
+    label='Project viewed', name='project_viewed'
+)
+event_project_exported = namespace.add_event_type(
+    label='Project exported', name='project_exported'
 )
 
 # Study events
 event_study_created = namespace.add_event_type(
-    label=_('Study created'), name='study_created'
+    label='Study created', name='study_created'
 )
 event_study_edited = namespace.add_event_type(
-    label=_('Study edited'), name='study_edited'
+    label='Study edited', name='study_edited'
 )
 event_study_deleted = namespace.add_event_type(
-    label=_('Study deleted'), name='study_deleted'
+    label='Study deleted', name='study_deleted'
+)
+event_study_viewed = namespace.add_event_type(
+    label='Study viewed', name='study_viewed'
 )
 
 # Dataset events
 event_dataset_created = namespace.add_event_type(
-    label=_('Dataset created'), name='dataset_created'
+    label='Dataset created', name='dataset_created'
 )
 event_dataset_edited = namespace.add_event_type(
-    label=_('Dataset edited'), name='dataset_edited'
+    label='Dataset edited', name='dataset_edited'
 )
 event_dataset_deleted = namespace.add_event_type(
-    label=_('Dataset deleted'), name='dataset_deleted'
+    label='Dataset deleted', name='dataset_deleted'
+)
+event_dataset_viewed = namespace.add_event_type(
+    label='Dataset viewed', name='dataset_viewed'
+)
+event_dataset_analyzed = namespace.add_event_type(
+    label='Dataset analyzed', name='dataset_analyzed'
 )
 
-# Document-dataset relationship events
-event_dataset_document_added = namespace.add_event_type(
-    label=_('Document added to dataset'), name='dataset_document_added'
-)
-event_dataset_document_removed = namespace.add_event_type(
-    label=_('Document removed from dataset'), name='dataset_document_removed'
-)
-
-# Analysis and processing events
+# Task and processing events
 event_dataset_analysis_started = namespace.add_event_type(
-    label=_('Dataset analysis started'), name='dataset_analysis_started'
+    label='Dataset analysis started', name='dataset_analysis_started'
 )
 event_dataset_analysis_completed = namespace.add_event_type(
-    label=_('Dataset analysis completed'), name='dataset_analysis_completed'
+    label='Dataset analysis completed', name='dataset_analysis_completed'
 )
 event_dataset_analysis_failed = namespace.add_event_type(
-    label=_('Dataset analysis failed'), name='dataset_analysis_failed'
+    label='Dataset analysis failed', name='dataset_analysis_failed'
+)
+event_dataset_processed = namespace.add_event_type(
+    label='Dataset processed', name='dataset_processed'
 )
 
-# Data processing events
-event_dataset_processed = namespace.add_event_type(
-    label=_('Dataset processed'), name='dataset_processed'
+# Document relationship events
+event_dataset_document_added = namespace.add_event_type(
+    label='Document added to dataset', name='dataset_document_added'
 )
-event_dataset_validation_completed = namespace.add_event_type(
-    label=_('Dataset validation completed'), name='dataset_validation_completed'
+event_dataset_document_removed = namespace.add_event_type(
+    label='Document removed from dataset', name='dataset_document_removed'
 )
 
 # Export and sharing events
 event_dataset_exported = namespace.add_event_type(
-    label=_('Dataset exported'), name='dataset_exported'
-)
-event_project_shared = namespace.add_event_type(
-    label=_('Project shared'), name='project_shared'
+    label='Dataset exported', name='dataset_exported'
 )
 event_dataset_shared = namespace.add_event_type(
-    label=_('Dataset results shared'), name='dataset_shared'
+    label='Dataset shared', name='dataset_shared'
+)
+event_dataset_share_expired = namespace.add_event_type(
+    label='Dataset share link expired', name='dataset_share_expired'
 )
 
-# Status change events
-event_dataset_status_changed = namespace.add_event_type(
-    label=_('Dataset status changed'), name='dataset_status_changed'
+# Analysis and quality events
+event_quality_check_performed = namespace.add_event_type(
+    label='Data quality check performed', name='quality_check_performed'
 )
-event_study_status_changed = namespace.add_event_type(
-    label=_('Study status changed'), name='study_status_changed'
+event_statistical_analysis_completed = namespace.add_event_type(
+    label='Statistical analysis completed', name='statistical_analysis_completed'
 )
 
-# Preview generation events (for demo)
-event_dataset_preview_generated = namespace.add_event_type(
-    label=_('Dataset preview generated'), name='dataset_preview_generated'
+# Task 2.2 enhanced events
+event_enhanced_analysis_completed = namespace.add_event_type(
+    label='Enhanced analysis completed', name='enhanced_analysis_completed'
+)
+event_professional_charts_generated = namespace.add_event_type(
+    label='Professional charts generated', name='professional_charts_generated'
+)
+event_quality_indicators_calculated = namespace.add_event_type(
+    label='Quality indicators calculated', name='quality_indicators_calculated'
 ) 

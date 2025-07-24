@@ -1,0 +1,16 @@
+sample_id,station_name,collection_date,ph_level,dissolved_oxygen_mg_l,turbidity_ntu,nitrates_mg_l,phosphates_mg_l,temperature_c,conductivity_us_cm
+WQ_RS1_001,River_Station_1,2024-01-20,7.1,8.2,2.8,1.5,0.08,14.2,285
+WQ_RS1_002,River_Station_1,2024-01-21,7.0,8.0,3.1,1.6,0.09,14.5,292
+WQ_RS1_003,River_Station_1,2024-01-22,6.9,7.8,3.4,1.8,0.10,14.8,298
+WQ_RS2_001,River_Station_2,2024-01-20,7.3,8.6,2.2,1.2,0.06,13.8,265
+WQ_RS2_002,River_Station_2,2024-01-21,7.2,8.4,2.4,1.3,0.07,14.1,271
+WQ_RS2_003,River_Station_2,2024-01-22,7.1,8.2,2.6,1.4,0.08,14.4,278
+WQ_LC_001,Lake_Center,2024-01-20,7.5,9.1,1.6,0.8,0.04,13.2,225
+WQ_LC_002,Lake_Center,2024-01-21,7.4,8.9,1.7,0.9,0.04,13.5,228
+WQ_LC_003,Lake_Center,2024-01-22,7.3,8.7,1.8,1.0,0.05,13.8,232
+WQ_WS_001,Wetland_Site,2024-01-20,6.8,7.2,4.1,2.2,0.12,15.6,315
+WQ_WS_002,Wetland_Site,2024-01-21,6.7,7.0,4.4,2.4,0.13,15.9,322
+WQ_WS_003,Wetland_Site,2024-01-22,6.6,6.8,4.7,2.6,0.14,16.2,329
+WQ_US_001,Upstream_Control,2024-01-20,7.6,9.4,1.2,0.6,0.03,12.8,210
+WQ_US_002,Upstream_Control,2024-01-21,7.5,9.2,1.3,0.7,0.03,13.1,213
+WQ_US_003,Upstream_Control,2024-01-22,7.4,9.0,1.4,0.8,0.04,13.4,217 

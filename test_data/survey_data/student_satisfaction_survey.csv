@@ -1,0 +1,16 @@
+response_id,age_group,education_level,satisfaction_score,likelihood_recommend,course_difficulty,instructor_rating,time_spent_hours,completion_status
+SURV001,18-24,Undergraduate,8.5,9,7,8.2,12.5,Completed
+SURV002,25-34,Graduate,7.8,8,8,7.9,15.2,Completed
+SURV003,18-24,Undergraduate,9.2,10,6,9.1,10.8,Completed
+SURV004,35-44,Professional,6.9,7,9,7.2,18.4,Completed
+SURV005,25-34,Graduate,8.1,8,7,8.5,14.1,Completed
+SURV006,18-24,Undergraduate,7.4,7,8,7.8,16.2,Incomplete
+SURV007,45-54,Professional,8.8,9,6,8.9,11.7,Completed
+SURV008,25-34,Graduate,9.0,9,7,9.3,13.5,Completed
+SURV009,18-24,Undergraduate,6.2,6,9,6.8,19.2,Incomplete
+SURV010,35-44,Professional,7.7,8,8,7.5,16.8,Completed
+SURV011,25-34,Graduate,8.6,9,6,8.4,12.3,Completed
+SURV012,55+,Continuing_Ed,9.1,10,5,9.2,9.8,Completed
+SURV013,18-24,Undergraduate,7.9,8,7,8.0,14.6,Completed
+SURV014,25-34,Graduate,8.3,8,8,8.1,15.9,Completed
+SURV015,35-44,Professional,7.1,7,9,7.4,17.5,Completed 

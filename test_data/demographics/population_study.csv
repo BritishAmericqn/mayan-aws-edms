@@ -1,0 +1,16 @@
+participant_id,age,gender,education_years,income_bracket,urban_rural,household_size,employment_status,region
+DEMO001,28,Female,16,50000-75000,Urban,2,Full-time,Northeast
+DEMO002,34,Male,18,75000-100000,Suburban,4,Full-time,Southeast
+DEMO003,42,Female,14,25000-50000,Rural,3,Part-time,Midwest
+DEMO004,26,Non-binary,20,100000+,Urban,1,Full-time,West
+DEMO005,55,Male,12,50000-75000,Suburban,2,Full-time,Northeast
+DEMO006,31,Female,16,75000-100000,Urban,3,Full-time,West
+DEMO007,39,Male,14,25000-50000,Rural,5,Unemployed,Southeast
+DEMO008,23,Female,18,25000-50000,Urban,1,Student,Northeast
+DEMO009,47,Male,16,100000+,Suburban,4,Full-time,West
+DEMO010,33,Female,20,75000-100000,Urban,2,Full-time,Southeast
+DEMO011,29,Male,14,50000-75000,Rural,3,Full-time,Midwest
+DEMO012,51,Female,12,25000-50000,Suburban,2,Part-time,Northeast
+DEMO013,37,Male,18,100000+,Urban,3,Full-time,West
+DEMO014,25,Female,16,50000-75000,Urban,1,Full-time,Southeast
+DEMO015,44,Male,14,75000-100000,Rural,4,Full-time,Midwest 

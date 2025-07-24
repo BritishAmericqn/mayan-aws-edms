@@ -5,9 +5,12 @@ from mayan.apps.rest_api import generics
 
 from .models import Project, Study, Dataset, DatasetDocument
 from .permissions import (
-    permission_project_view, permission_project_create,
+    permission_project_view, permission_project_create, 
+    permission_project_edit, permission_project_delete,
     permission_study_view, permission_study_create,
+    permission_study_edit, permission_study_delete,
     permission_dataset_view, permission_dataset_create,
+    permission_dataset_edit, permission_dataset_delete,
     permission_dataset_analyze
 )
 from .serializers import (
@@ -59,9 +62,9 @@ class APIProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = 'project_id'
     mayan_object_permission_map = {
         'GET': permission_project_view,
-        'PATCH': permission_project_view,
-        'PUT': permission_project_view,
-        'DELETE': permission_project_view
+        'PATCH': permission_project_edit,
+        'PUT': permission_project_edit,
+        'DELETE': permission_project_delete
     }
     serializer_class = ProjectSerializer
     
@@ -101,9 +104,9 @@ class APIStudyDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = 'study_id'
     mayan_object_permission_map = {
         'GET': permission_study_view,
-        'PATCH': permission_study_view,
-        'PUT': permission_study_view,
-        'DELETE': permission_study_view
+        'PATCH': permission_study_edit,
+        'PUT': permission_study_edit,
+        'DELETE': permission_study_delete
     }
     serializer_class = StudySerializer
     
@@ -143,9 +146,9 @@ class APIDatasetDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = 'dataset_id'
     mayan_object_permission_map = {
         'GET': permission_dataset_view,
-        'PATCH': permission_dataset_view,
-        'PUT': permission_dataset_view,
-        'DELETE': permission_dataset_view
+        'PATCH': permission_dataset_edit,
+        'PUT': permission_dataset_edit,
+        'DELETE': permission_dataset_delete
     }
     serializer_class = DatasetSerializer
     

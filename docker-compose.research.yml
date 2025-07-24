@@ -1,0 +1,84 @@
+version: '3.9'
+
+services:
+  app:
+    image: mayanedms/mayanedms:s4.9
+    ports:
+      - "80:8000"
+    environment:
+      # Database configuration
+      MAYAN_DATABASES: "{'default':{'ENGINE':'django.db.backends.postgresql','NAME':'mayan','PASSWORD':'mayandbpass','USER':'mayan','HOST':'postgresql','PORT':'','CONN_MAX_AGE':0}}"
+      
+      # Celery configuration
+      MAYAN_CELERY_BROKER_URL: "amqp://mayan:mayanrabbitpass@rabbitmq:5672/mayan"
+      MAYAN_CELERY_RESULT_BACKEND: "redis://:mayanredispassword@redis:6379/1"
+      
+      # Lock manager
+      MAYAN_LOCK_MANAGER_BACKEND: "mayan.apps.lock_manager.backends.redis_lock.RedisLock"
+      MAYAN_LOCK_MANAGER_BACKEND_ARGUMENTS: "{'redis_url':'redis://:mayanredispassword@redis:6379/2'}"
+      
+      # Enable research platform
+      MAYAN_COMMON_EXTRA_APPS: "['mayan.apps.research.apps.ResearchApp']"
+    volumes:
+      - app_data:/var/lib/mayan
+      # Mount our research app
+      - ./mayan/apps/research:/opt/mayan-edms/lib/python3.11/site-packages/mayan/apps/research:ro
+    depends_on:
+      - postgresql
+      - redis
+      - rabbitmq
+    networks:
+      - mayan
+    restart: unless-stopped
+
+  postgresql:
+    image: postgres:14.15-alpine3.21
+    environment:
+      POSTGRES_DB: mayan
+      POSTGRES_PASSWORD: mayandbpass
+      POSTGRES_USER: mayan
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mayan
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4.1-alpine3.20
+    command:
+      - redis-server
+      - --requirepass
+      - mayanredispassword
+      - --databases
+      - "3"
+      - --maxmemory
+      - "100mb"
+      - --maxmemory-policy
+      - "allkeys-lru"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mayan
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:4.0.5-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: mayan
+      RABBITMQ_DEFAULT_PASS: mayanrabbitpass
+      RABBITMQ_DEFAULT_VHOST: mayan
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - mayan
+    restart: unless-stopped
+
+volumes:
+  app_data:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  mayan:
+    driver: bridge 

@@ -1,0 +1,16 @@
+experiment_id,treatment_group,replicate,enzyme_activity_units,protein_concentration_mg_ml,temperature_c,ph_buffer,reaction_time_min,optical_density_450nm
+EXP001,Control,1,125.8,2.45,37.0,7.4,30,0.285
+EXP002,Control,2,128.2,2.41,37.0,7.4,30,0.291
+EXP003,Control,3,122.6,2.48,37.0,7.4,30,0.278
+EXP004,Treatment_A,1,156.3,2.43,37.0,7.4,30,0.354
+EXP005,Treatment_A,2,159.1,2.46,37.0,7.4,30,0.361
+EXP006,Treatment_A,3,152.7,2.41,37.0,7.4,30,0.347
+EXP007,Treatment_B,1,187.4,2.44,37.0,7.4,30,0.425
+EXP008,Treatment_B,2,191.2,2.47,37.0,7.4,30,0.434
+EXP009,Treatment_B,3,184.6,2.42,37.0,7.4,30,0.419
+EXP010,High_Temp,1,98.3,2.45,42.0,7.4,30,0.223
+EXP011,High_Temp,2,101.7,2.43,42.0,7.4,30,0.231
+EXP012,High_Temp,3,95.9,2.46,42.0,7.4,30,0.218
+EXP013,Low_pH,1,76.2,2.44,37.0,6.8,30,0.173
+EXP014,Low_pH,2,79.8,2.42,37.0,6.8,30,0.181
+EXP015,Low_pH,3,74.1,2.47,37.0,6.8,30,0.168 

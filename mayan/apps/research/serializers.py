@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from mayan.apps.documents.serializers import DocumentSerializer
+from mayan.apps.documents.serializers.document_serializers import DocumentSerializer
 
 from .models import Project, Study, Dataset, DatasetDocument
 

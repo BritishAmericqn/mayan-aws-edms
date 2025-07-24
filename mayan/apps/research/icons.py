@@ -1,4 +1,4 @@
-from mayan.apps.appearance.classes import Icon
+from mayan.apps.appearance.icons import Icon
 
 # Project icons
 icon_project_list = Icon(driver_name='fontawesome', symbol='folder-open')
