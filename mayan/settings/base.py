@@ -125,6 +125,7 @@ INSTALLED_APPS = (
     # https://docs.djangoproject.com/en/4.2/topics/signals/#listening-to-signals
     # https://code.djangoproject.com/ticket/16547
     'mayan.apps.documents.apps.DocumentsApp',
+    'mayan.apps.research.apps.ResearchApp',
     'mayan.apps.cabinets.apps.CabinetsApp',
     'mayan.apps.checkouts.apps.CheckoutsApp',
     'mayan.apps.document_comments.apps.DocumentCommentsApp',
@@ -146,6 +147,7 @@ INSTALLED_APPS = (
     'mayan.apps.mailer.apps.MailerApp',
     'mayan.apps.mayan_statistics.apps.StatisticsApp',
     'mayan.apps.metadata.apps.MetadataApp',
+    'mayan.apps.research.apps.ResearchApp',
     'mayan.apps.mirroring.apps.MirroringApp',
     'mayan.apps.ocr.apps.OCRApp',
     'mayan.apps.redactions.apps.RedactionsApp',

@@ -1,0 +1,19 @@
+version: '3.9'
+
+# Development override - exposes database ports for local development
+# This allows Mayan to run locally while using containerized databases
+# Perfect for AWS-aligned development setup
+
+services:
+  postgresql:
+    ports:
+      - "5432:5432"  # Expose PostgreSQL to host for development
+    
+  redis:
+    ports:
+      - "6379:6379"  # Expose Redis to host for development
+      
+  rabbitmq:
+    ports:
+      - "5672:5672"   # Expose RabbitMQ to host for development
+      - "15672:15672" # Expose RabbitMQ management interface 

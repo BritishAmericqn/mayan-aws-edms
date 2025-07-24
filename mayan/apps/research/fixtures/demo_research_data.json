@@ -1,0 +1,281 @@
+[
+  {
+    "model": "research.project",
+    "pk": 1,
+    "fields": {
+      "title": "Climate Change Impact Assessment",
+      "description": "Comprehensive study of climate change impacts on urban environments and infrastructure resilience across multiple metropolitan areas.",
+      "principal_investigator": "Dr. Sarah Chen",
+      "institution": "University of Environmental Sciences",
+      "status": "active",
+      "start_date": "2024-01-15",
+      "end_date": "2026-12-31",
+      "funding_source": "National Science Foundation",
+      "funding_amount": "2500000.00",
+      "datetime_created": "2024-01-15T09:00:00Z",
+      "datetime_modified": "2024-01-15T09:00:00Z"
+    }
+  },
+  {
+    "model": "research.project",
+    "pk": 2,
+    "fields": {
+      "title": "Healthcare Data Analytics Platform",
+      "description": "Development of machine learning models for predictive healthcare analytics using large-scale patient data to improve treatment outcomes.",
+      "principal_investigator": "Dr. Michael Rodriguez",
+      "institution": "Medical Research Institute",
+      "status": "active",
+      "start_date": "2024-02-01",
+      "end_date": "2025-07-31",
+      "funding_source": "NIH Research Grant",
+      "funding_amount": "1800000.00",
+      "datetime_created": "2024-02-01T10:30:00Z",
+      "datetime_modified": "2024-02-01T10:30:00Z"
+    }
+  },
+  {
+    "model": "research.project",
+    "pk": 3,
+    "fields": {
+      "title": "Renewable Energy Optimization",
+      "description": "Research into optimizing renewable energy grid integration using IoT sensors and predictive modeling for smart city applications.",
+      "principal_investigator": "Dr. Emily Watson",
+      "institution": "Institute of Technology",
+      "status": "planning",
+      "start_date": "2024-06-01",
+      "end_date": "2027-05-31",
+      "funding_source": "Department of Energy",
+      "funding_amount": "3200000.00",
+      "datetime_created": "2024-03-10T14:15:00Z",
+      "datetime_modified": "2024-03-10T14:15:00Z"
+    }
+  },
+  {
+    "model": "research.study",
+    "pk": 1,
+    "fields": {
+      "title": "Urban Heat Island Analysis",
+      "description": "Detailed analysis of urban heat island effects in major metropolitan areas using satellite data and ground-based temperature sensors.",
+      "project": 1,
+      "status": "active",
+      "study_type": "observational",
+      "methodology": "Remote sensing analysis combined with statistical modeling",
+      "start_date": "2024-01-20",
+      "end_date": "2024-12-15",
+      "datetime_created": "2024-01-20T11:00:00Z",
+      "datetime_modified": "2024-01-20T11:00:00Z"
+    }
+  },
+  {
+    "model": "research.study",
+    "pk": 2,
+    "fields": {
+      "title": "Infrastructure Resilience Assessment",
+      "description": "Evaluation of infrastructure resilience to climate change impacts including flood resistance and thermal stress analysis.",
+      "project": 1,
+      "status": "active",
+      "study_type": "experimental",
+      "methodology": "Field testing and computational modeling",
+      "start_date": "2024-03-01",
+      "end_date": "2025-08-31",
+      "datetime_created": "2024-03-01T09:45:00Z",
+      "datetime_modified": "2024-03-01T09:45:00Z"
+    }
+  },
+  {
+    "model": "research.study",
+    "pk": 3,
+    "fields": {
+      "title": "Patient Outcome Prediction",
+      "description": "Development of machine learning models to predict patient outcomes based on historical medical records and treatment patterns.",
+      "project": 2,
+      "status": "active",
+      "study_type": "computational",
+      "methodology": "Machine learning and statistical analysis",
+      "start_date": "2024-02-15",
+      "end_date": "2024-11-30",
+      "datetime_created": "2024-02-15T13:20:00Z",
+      "datetime_modified": "2024-02-15T13:20:00Z"
+    }
+  },
+  {
+    "model": "research.study",
+    "pk": 4,
+    "fields": {
+      "title": "Treatment Effectiveness Analysis",
+      "description": "Comparative analysis of treatment effectiveness across different patient demographics and medical conditions.",
+      "project": 2,
+      "status": "planning",
+      "study_type": "retrospective",
+      "methodology": "Retrospective cohort analysis",
+      "start_date": "2024-06-01",
+      "end_date": "2025-03-31",
+      "datetime_created": "2024-03-15T16:10:00Z",
+      "datetime_modified": "2024-03-15T16:10:00Z"
+    }
+  },
+  {
+    "model": "research.study",
+    "pk": 5,
+    "fields": {
+      "title": "Smart Grid Integration",
+      "description": "Research into optimal integration strategies for renewable energy sources into existing power grid infrastructure.",
+      "project": 3,
+      "status": "planning",
+      "study_type": "experimental",
+      "methodology": "Simulation modeling and field testing",
+      "start_date": "2024-07-01",
+      "end_date": "2026-12-31",
+      "datetime_created": "2024-03-20T10:00:00Z",
+      "datetime_modified": "2024-03-20T10:00:00Z"
+    }
+  },
+  {
+    "model": "research.dataset",
+    "pk": 1,
+    "fields": {
+      "title": "Temperature Station Data 2024",
+      "description": "Comprehensive temperature readings from 150 weather stations across 5 metropolitan areas, collected hourly throughout 2024.",
+      "study": 1,
+      "status": "active",
+      "data_type": "csv",
+      "format": "csv",
+      "size_bytes": 52428800,
+      "analysis_status": "completed",
+      "analysis_results": {
+        "row_count": 8760,
+        "column_count": 12,
+        "data_quality": {
+          "completeness": 0.97,
+          "missing_values": 0.03,
+          "duplicates": 0.001
+        },
+        "summary_statistics": {
+          "avg_temperature": 18.5,
+          "max_temperature": 42.1,
+          "min_temperature": -15.3,
+          "temperature_variance": 12.8
+        },
+        "geographic_coverage": ["New York", "Chicago", "Los Angeles", "Houston", "Phoenix"]
+      },
+      "datetime_created": "2024-01-25T08:30:00Z",
+      "datetime_modified": "2024-01-25T08:30:00Z"
+    }
+  },
+  {
+    "model": "research.dataset",
+    "pk": 2,
+    "fields": {
+      "title": "Satellite Thermal Imagery",
+      "description": "High-resolution thermal satellite imagery of urban areas captured monthly over the past year, processed for heat island analysis.",
+      "study": 1,
+      "status": "active",
+      "data_type": "image",
+      "format": "png",
+      "size_bytes": 2147483648,
+      "analysis_status": "processing",
+      "analysis_results": null,
+      "datetime_created": "2024-02-01T12:15:00Z",
+      "datetime_modified": "2024-02-01T12:15:00Z"
+    }
+  },
+  {
+    "model": "research.dataset",
+    "pk": 3,
+    "fields": {
+      "title": "Infrastructure Stress Test Results",
+      "description": "Mechanical stress test data from bridge and building samples under various temperature and load conditions.",
+      "study": 2,
+      "status": "active",
+      "data_type": "excel",
+      "format": "xlsx",
+      "size_bytes": 104857600,
+      "analysis_status": "completed",
+      "analysis_results": {
+        "row_count": 2500,
+        "column_count": 18,
+        "data_quality": {
+          "completeness": 0.99,
+          "missing_values": 0.01,
+          "duplicates": 0.0
+        },
+        "stress_analysis": {
+          "failure_threshold": 85.2,
+          "safety_margin": 15.8,
+          "critical_temperature": 45.0
+        }
+      },
+      "datetime_created": "2024-03-05T14:45:00Z",
+      "datetime_modified": "2024-03-05T14:45:00Z"
+    }
+  },
+  {
+    "model": "research.dataset",
+    "pk": 4,
+    "fields": {
+      "title": "Patient Medical Records Dataset",
+      "description": "Anonymized patient medical records spanning 5 years, including diagnoses, treatments, and outcomes for predictive modeling.",
+      "study": 3,
+      "status": "active",
+      "data_type": "csv",
+      "format": "csv",
+      "size_bytes": 1073741824,
+      "analysis_status": "completed",
+      "analysis_results": {
+        "row_count": 125000,
+        "column_count": 45,
+        "data_quality": {
+          "completeness": 0.94,
+          "missing_values": 0.06,
+          "duplicates": 0.002
+        },
+        "patient_demographics": {
+          "age_range": "18-89",
+          "gender_distribution": {"M": 0.48, "F": 0.52},
+          "condition_categories": 15
+        },
+        "outcome_metrics": {
+          "recovery_rate": 0.87,
+          "readmission_rate": 0.12,
+          "treatment_success": 0.82
+        }
+      },
+      "datetime_created": "2024-02-20T09:00:00Z",
+      "datetime_modified": "2024-02-20T09:00:00Z"
+    }
+  },
+  {
+    "model": "research.dataset",
+    "pk": 5,
+    "fields": {
+      "title": "Treatment Protocol Database",
+      "description": "Comprehensive database of treatment protocols, medication dosages, and therapeutic interventions with effectiveness ratings.",
+      "study": 3,
+      "status": "active",
+      "data_type": "json",
+      "format": "json",
+      "size_bytes": 314572800,
+      "analysis_status": "pending",
+      "analysis_results": null,
+      "datetime_created": "2024-03-01T11:30:00Z",
+      "datetime_modified": "2024-03-01T11:30:00Z"
+    }
+  },
+  {
+    "model": "research.dataset",
+    "pk": 6,
+    "fields": {
+      "title": "Energy Grid Sensor Data",
+      "description": "Real-time sensor data from smart grid infrastructure monitoring energy production, consumption, and distribution patterns.",
+      "study": 5,
+      "status": "planning",
+      "data_type": "csv",
+      "format": "csv",
+      "size_bytes": 0,
+      "analysis_status": "pending",
+      "analysis_results": null,
+      "datetime_created": "2024-03-25T15:20:00Z",
+      "datetime_modified": "2024-03-25T15:20:00Z"
+    }
+  }
+] 

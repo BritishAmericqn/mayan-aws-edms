@@ -1,0 +1,29 @@
+# Dockerfile.research - Production-ready Mayan EDMS with Research Platform
+FROM mayanedms/mayanedms:s4.9
+
+# Install additional Python dependencies for research platform
+USER root
+
+# Install pip first
+RUN apt-get update && apt-get install -y python3-pip && rm -rf /var/lib/apt/lists/*
+
+COPY requirements-research.txt /tmp/
+RUN python3 -m pip install --no-cache-dir --break-system-packages -r /tmp/requirements-research.txt
+
+# Copy research app to proper location
+COPY mayan/apps/research/ /opt/mayan-edms/lib/python3.11/site-packages/mayan/apps/research/
+
+# Create custom settings override
+COPY docker/settings_research.py /opt/mayan-edms/lib/python3.11/site-packages/mayan/settings/research.py
+
+# Set environment to load research app
+ENV MAYAN_SETTINGS_MODULE=mayan.settings.research
+ENV MAYAN_RESEARCH_ENABLED=true
+
+# Ensure proper permissions
+RUN chown -R mayan:mayan /opt/mayan-edms/lib/python3.11/site-packages/mayan/apps/research/
+RUN chown mayan:mayan /opt/mayan-edms/lib/python3.11/site-packages/mayan/settings/research.py
+
+USER mayan
+
+# Use standard Mayan entrypoint - let it handle startup properly 

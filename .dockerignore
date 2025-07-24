@@ -5,6 +5,8 @@ mayan/media
 db.sqlite*
 docker
 !docker/rootfs
+!docker/settings_research.py
+!docker/entrypoint-research.sh
 ./.*
 docs
 

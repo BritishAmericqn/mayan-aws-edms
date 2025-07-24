@@ -1,0 +1,128 @@
+{% extends 'appearance/base.html' %}
+
+{% load i18n %}
+{% load navigation_tags %}
+
+{% block title %}{% include 'appearance/partials/title.html' with non_html_title=True %}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-xs-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'research:project_list' %}">{% trans 'Projects' %}</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'research:project_detail' project.pk %}">{{ project.title }}</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ study.title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-8">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Study Details' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <dl class="dl-horizontal">
+                        <dt>{% trans 'Title' %}</dt>
+                        <dd>{{ study.title }}</dd>
+                        
+                        {% if study.description %}
+                        <dt>{% trans 'Description' %}</dt>
+                        <dd>{{ study.description|linebreaks }}</dd>
+                        {% endif %}
+                        
+                        <dt>{% trans 'Project' %}</dt>
+                        <dd>
+                            <a href="{% url 'research:project_detail' project.pk %}">{{ project.title }}</a>
+                        </dd>
+                        
+                        <dt>{% trans 'Study Type' %}</dt>
+                        <dd>{{ study.get_study_type_display }}</dd>
+                        
+                        <dt>{% trans 'Status' %}</dt>
+                        <dd>
+                            <span class="label label-{% if study.status == 'active' %}success{% elif study.status == 'completed' %}info{% elif study.status == 'on_hold' %}warning{% else %}default{% endif %}">
+                                {{ study.get_status_display }}
+                            </span>
+                        </dd>
+                        
+                        <dt>{% trans 'Start Date' %}</dt>
+                        <dd>{{ study.start_date|date:"M d, Y" }}</dd>
+                        
+                        {% if study.end_date %}
+                        <dt>{% trans 'End Date' %}</dt>
+                        <dd>{{ study.end_date|date:"M d, Y" }}</dd>
+                        {% endif %}
+                        
+                        <dt>{% trans 'Created' %}</dt>
+                        <dd>{{ study.datetime_created|date:"M d, Y H:i" }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xs-12 col-sm-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Study Statistics' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <dl>
+                        <dt>{% trans 'Datasets' %}</dt>
+                        <dd>{{ study.datasets.count }}</dd>
+                        
+                        <dt>{% trans 'Total Documents' %}</dt>
+                        <dd>{{ study.total_documents_count }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Datasets in this Study' %}</h3>
+                </div>
+                <div class="panel-body">
+                    {% if study.datasets.exists %}
+                        <div class="list-group">
+                            {% for dataset in study.datasets.all %}
+                                <a href="{% url 'research:dataset_detail' dataset.pk %}" class="list-group-item">
+                                    <h4 class="list-group-item-heading">{{ dataset.name }}</h4>
+                                    {% if dataset.description %}
+                                        <p class="list-group-item-text">{{ dataset.description|truncatewords:25 }}</p>
+                                    {% endif %}
+                                    <small class="text-muted">
+                                        {% trans 'Type:' %} {{ dataset.get_data_type_display }} | 
+                                        {% trans 'Status:' %} {{ dataset.get_analysis_status_display }} |
+                                        {% trans 'Documents:' %} {{ dataset.documents.count }}
+                                    </small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <i class="fa fa-database fa-3x text-muted"></i>
+                            <h4>{{ no_results_title }}</h4>
+                            <p>{{ no_results_text }}</p>
+                            {% if no_results_main_link %}
+                                <a href="{{ no_results_main_link.url }}" class="btn btn-primary">
+                                    <i class="fa fa-plus"></i> {% trans 'Create First Dataset' %}
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

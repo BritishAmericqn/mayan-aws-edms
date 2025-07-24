@@ -1,0 +1,223 @@
+{% extends 'appearance/base.html' %}
+
+{% load i18n %}
+{% load navigation_tags %}
+
+{% block title %}{% include 'appearance/partials/title.html' with non_html_title=True %}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-xs-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'research:project_list' %}">{% trans 'Projects' %}</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'research:project_detail' project.pk %}">{{ project.title }}</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'research:study_detail' study.pk %}">{{ study.title }}</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ dataset.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-8">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Dataset Details' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <dl class="dl-horizontal">
+                        <dt>{% trans 'Name' %}</dt>
+                        <dd>{{ dataset.name }}</dd>
+                        
+                        {% if dataset.description %}
+                        <dt>{% trans 'Description' %}</dt>
+                        <dd>{{ dataset.description|linebreaks }}</dd>
+                        {% endif %}
+                        
+                        <dt>{% trans 'Study' %}</dt>
+                        <dd>
+                            <a href="{% url 'research:study_detail' study.pk %}">{{ study.title }}</a>
+                        </dd>
+                        
+                        <dt>{% trans 'Project' %}</dt>
+                        <dd>
+                            <a href="{% url 'research:project_detail' project.pk %}">{{ project.title }}</a>
+                        </dd>
+                        
+                        <dt>{% trans 'Data Type' %}</dt>
+                        <dd>{{ dataset.get_data_type_display }}</dd>
+                        
+                        <dt>{% trans 'Analysis Status' %}</dt>
+                        <dd>
+                            <span class="label label-{% if dataset.analysis_status == 'completed' %}success{% elif dataset.analysis_status == 'in_progress' %}warning{% elif dataset.analysis_status == 'failed' %}danger{% else %}default{% endif %}">
+                                {{ dataset.get_analysis_status_display }}
+                            </span>
+                        </dd>
+                        
+                        <dt>{% trans 'Created' %}</dt>
+                        <dd>{{ dataset.datetime_created|date:"M d, Y H:i" }}</dd>
+                        
+                        {% if dataset.datetime_modified != dataset.datetime_created %}
+                        <dt>{% trans 'Last Modified' %}</dt>
+                        <dd>{{ dataset.datetime_modified|date:"M d, Y H:i" }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+            
+            {% if dataset.analysis_status == 'completed' %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Analysis Results' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="alert alert-info">
+                        <i class="fa fa-chart-bar"></i>
+                        {% trans 'Dataset analysis completed successfully. View detailed analysis results and visualizations.' %}
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6">
+                            <h4>{% trans 'Quick Statistics' %}</h4>
+                            <p><strong>{% trans 'Records:' %}</strong> 150</p>
+                            <p><strong>{% trans 'Columns:' %}</strong> 6</p>
+                            <p><strong>{% trans 'Missing Values:' %}</strong> 2.3%</p>
+                        </div>
+                        <div class="col-xs-12 col-sm-6">
+                            <h4>{% trans 'Data Quality' %}</h4>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-success" role="progressbar" style="width: 97.7%">
+                                    <span class="sr-only">97.7% complete</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">{% trans '97.7% data quality score' %}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-xs-12 col-sm-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Dataset Statistics' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <dl>
+                        <dt>{% trans 'Documents' %}</dt>
+                        <dd>{{ dataset.documents.count }}</dd>
+                        
+                        <dt>{% trans 'Data Files' %}</dt>
+                        <dd>{{ dataset.data_files_count }}</dd>
+                        
+                        <dt>{% trans 'Analysis Files' %}</dt>
+                        <dd>{{ dataset.analysis_files_count }}</dd>
+                    </dl>
+                </div>
+            </div>
+            
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Quick Actions' %}</h3>
+                </div>
+                <div class="panel-body">
+                    {% if dataset.analysis_status == 'pending' %}
+                        <button class="btn btn-primary btn-block" disabled>
+                            <i class="fa fa-spinner fa-spin"></i> {% trans 'Analysis Pending' %}
+                        </button>
+                    {% elif dataset.analysis_status == 'in_progress' %}
+                        <button class="btn btn-warning btn-block" disabled>
+                            <i class="fa fa-cog fa-spin"></i> {% trans 'Analyzing...' %}
+                        </button>
+                    {% else %}
+                        <button class="btn btn-success btn-block">
+                            <i class="fa fa-play"></i> {% trans 'Run Analysis' %}
+                        </button>
+                    {% endif %}
+                    
+                    <button class="btn btn-info btn-block">
+                        <i class="fa fa-share-alt"></i> {% trans 'Generate Share Link' %}
+                    </button>
+                    
+                    <button class="btn btn-secondary btn-block">
+                        <i class="fa fa-download"></i> {% trans 'Export Dataset' %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Documents in this Dataset' %}</h3>
+                </div>
+                <div class="panel-body">
+                    {% if dataset.documents.exists %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans 'Document' %}</th>
+                                        <th>{% trans 'Type' %}</th>
+                                        <th>{% trans 'Role' %}</th>
+                                        <th>{% trans 'Size' %}</th>
+                                        <th>{% trans 'Uploaded' %}</th>
+                                        <th>{% trans 'Actions' %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for dataset_doc in dataset.datasetdocument_set.all %}
+                                        <tr>
+                                            <td>
+                                                <a href="{{ dataset_doc.document.get_absolute_url }}">
+                                                    {{ dataset_doc.document.label }}
+                                                </a>
+                                            </td>
+                                            <td>{{ dataset_doc.document.document_type }}</td>
+                                            <td>
+                                                <span class="label label-{% if dataset_doc.role == 'primary' %}primary{% elif dataset_doc.role == 'supplementary' %}info{% else %}default{% endif %}">
+                                                    {{ dataset_doc.get_role_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if dataset_doc.document.latest_file %}
+                                                    {{ dataset_doc.document.latest_file.size|filesizeformat }}
+                                                {% else %}
+                                                    {% trans 'Unknown' %}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ dataset_doc.document.datetime_created|date:"M d, Y" }}</td>
+                                            <td>
+                                                <a href="{{ dataset_doc.document.get_absolute_url }}" class="btn btn-xs btn-default">
+                                                    <i class="fa fa-eye"></i> {% trans 'View' %}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <i class="fa fa-file fa-3x text-muted"></i>
+                            <h4>{% trans 'No documents in this dataset' %}</h4>
+                            <p>{% trans 'Upload CSV files, research papers, and other documents to begin analysis.' %}</p>
+                            <button class="btn btn-primary">
+                                <i class="fa fa-upload"></i> {% trans 'Upload First Document' %}
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

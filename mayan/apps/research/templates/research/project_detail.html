@@ -1,0 +1,122 @@
+{% extends 'appearance/base.html' %}
+
+{% load i18n %}
+{% load navigation_tags %}
+
+{% block title %}{% include 'appearance/partials/title.html' with non_html_title=True %}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-xs-12 col-sm-8">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Project Details' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <dl class="dl-horizontal">
+                        <dt>{% trans 'Title' %}</dt>
+                        <dd>{{ project.title }}</dd>
+                        
+                        {% if project.description %}
+                        <dt>{% trans 'Description' %}</dt>
+                        <dd>{{ project.description|linebreaks }}</dd>
+                        {% endif %}
+                        
+                        <dt>{% trans 'Principal Investigator' %}</dt>
+                        <dd>{{ project.principal_investigator }}</dd>
+                        
+                        {% if project.institution %}
+                        <dt>{% trans 'Institution' %}</dt>
+                        <dd>{{ project.institution }}</dd>
+                        {% endif %}
+                        
+                        <dt>{% trans 'Status' %}</dt>
+                        <dd>
+                            <span class="label label-{% if project.status == 'active' %}success{% elif project.status == 'completed' %}info{% elif project.status == 'on_hold' %}warning{% else %}default{% endif %}">
+                                {{ project.get_status_display }}
+                            </span>
+                        </dd>
+                        
+                        <dt>{% trans 'Start Date' %}</dt>
+                        <dd>{{ project.start_date|date:"M d, Y" }}</dd>
+                        
+                        {% if project.end_date %}
+                        <dt>{% trans 'End Date' %}</dt>
+                        <dd>{{ project.end_date|date:"M d, Y" }}</dd>
+                        {% endif %}
+                        
+                        {% if project.funding_source %}
+                        <dt>{% trans 'Funding Source' %}</dt>
+                        <dd>{{ project.funding_source }}</dd>
+                        {% endif %}
+                        
+                        {% if project.funding_amount %}
+                        <dt>{% trans 'Funding Amount' %}</dt>
+                        <dd>${{ project.funding_amount|floatformat:2 }}</dd>
+                        {% endif %}
+                        
+                        <dt>{% trans 'Created' %}</dt>
+                        <dd>{{ project.datetime_created|date:"M d, Y H:i" }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xs-12 col-sm-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Project Statistics' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <dl>
+                        <dt>{% trans 'Studies' %}</dt>
+                        <dd>{{ project.studies_count }}</dd>
+                        
+                        <dt>{% trans 'Total Datasets' %}</dt>
+                        <dd>{{ project.datasets_count }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Studies in this Project' %}</h3>
+                </div>
+                <div class="panel-body">
+                    {% if project.studies.exists %}
+                        <div class="list-group">
+                            {% for study in project.studies.all %}
+                                <a href="{% url 'research:study_detail' study.pk %}" class="list-group-item">
+                                    <h4 class="list-group-item-heading">{{ study.title }}</h4>
+                                    {% if study.description %}
+                                        <p class="list-group-item-text">{{ study.description|truncatewords:30 }}</p>
+                                    {% endif %}
+                                    <small class="text-muted">
+                                        {% trans 'Type:' %} {{ study.get_study_type_display }} | 
+                                        {% trans 'Status:' %} {{ study.get_status_display }} |
+                                        {% trans 'Datasets:' %} {{ study.datasets.count }}
+                                    </small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <i class="fa fa-flask fa-3x text-muted"></i>
+                            <h4>{{ no_results_title }}</h4>
+                            <p>{{ no_results_text }}</p>
+                            {% if no_results_main_link %}
+                                <a href="{{ no_results_main_link.url }}" class="btn btn-primary">
+                                    <i class="fa fa-plus"></i> {% trans 'Create First Study' %}
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

@@ -1,0 +1,102 @@
+version: '3.9'
+
+x-mayan-container:
+  &mayan-container
+  env_file: .env
+  environment:
+    MAYAN_CELERY_BROKER_URL: amqp://${MAYAN_RABBITMQ_USER:-mayan}:${MAYAN_RABBITMQ_PASSWORD:-mayanrabbitpass}@${MAYAN_DOCKER_RABBITMQ_HOSTNAME:-rabbitmq}:${MAYAN_DOCKER_RABBITMQ_PORT:-5672}/${MAYAN_RABBITMQ_VHOST:-mayan}
+    MAYAN_CELERY_RESULT_BACKEND: redis://:${MAYAN_REDIS_PASSWORD:-mayanredispassword}@${MAYAN_DOCKER_REDIS_HOSTNAME:-redis}:${MAYAN_DOCKER_REDIS_PORT:-6379}/${MAYAN_REDIS_RESULT_DATABASE:-1}
+    MAYAN_DATABASES: "{'default':{'ENGINE':'django.db.backends.postgresql','NAME':'${MAYAN_DATABASE_NAME:-mayan}','PASSWORD':'${MAYAN_DATABASE_PASSWORD:-mayandbpass}','USER':'${MAYAN_DATABASE_USER:-mayan}','HOST':'${MAYAN_DATABASE_HOST:-postgresql}','PORT':${MAYAN_DATABASE_PORT:-},'CONN_MAX_AGE':${MAYAN_DATABASE_CONN_MAX_AGE:-0},${MAYAN_DATABASE_EXTRA_OPTIONS:-}}}"
+    MAYAN_LOCK_MANAGER_BACKEND: mayan.apps.lock_manager.backends.redis_lock.RedisLock
+    MAYAN_LOCK_MANAGER_BACKEND_ARGUMENTS: "{'redis_url':'redis://:${MAYAN_REDIS_PASSWORD:-mayanredispassword}@${MAYAN_DOCKER_REDIS_HOSTNAME:-redis}:${MAYAN_DOCKER_REDIS_PORT:-6379}/${MAYAN_REDIS_LOCK_MANAGER_DATABASE:-2}'}"
+    # Fix Python path to use our local code
+    PYTHONPATH: /app
+    DJANGO_SETTINGS_MODULE: mayan.settings.production
+  image: ${MAYAN_DOCKER_IMAGE_NAME:-mayanedms/mayanedms}:${MAYAN_DOCKER_IMAGE_TAG:-s4.9}
+  networks:
+    - mayan
+  restart: unless-stopped
+  volumes:
+    - ${MAYAN_APP_VOLUME:-app}:/var/lib/mayan
+    # Mount our local source code for development - FIXES the path issue
+    - .:/app:ro
+  working_dir: /app
+
+networks:
+  mayan:
+    driver: bridge
+
+services:
+  app:
+    <<: *mayan-container
+    ports:
+      - "${MAYAN_FRONTEND_HTTP_PORT:-8080}:8000"
+    command: |
+      sh -c "
+        echo 'Starting Mayan with Research Platform...'
+        cd /app/mayan
+        python3 manage.py migrate
+        python3 manage.py collectstatic --noinput
+        python3 manage.py runserver 0.0.0.0:8000
+      "
+
+  postgresql:
+    environment:
+      POSTGRES_DB: ${MAYAN_DATABASE_NAME:-mayan}
+      POSTGRES_PASSWORD: ${MAYAN_DATABASE_PASSWORD:-mayandbpass}
+      POSTGRES_USER: ${MAYAN_DATABASE_USER:-mayan}
+    image: postgres:14.15-alpine3.21
+    networks:
+      - mayan
+    restart: unless-stopped
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MAYAN_DATABASE_USER:-mayan}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    command:
+      - redis-server
+      - --appendonly
+      - "no"
+      - --databases
+      - "3"
+      - --maxmemory
+      - "100mb"
+      - --maxclients
+      - "500"
+      - --maxmemory-policy
+      - "allkeys-lru"
+      - --save
+      - ""
+      - --tcp-backlog
+      - "256"
+      - --requirepass
+      - "${MAYAN_REDIS_PASSWORD:-mayanredispassword}"
+    image: redis:7.4.1-alpine3.20
+    networks:
+      - mayan
+    restart: unless-stopped
+    volumes:
+      - redis:/data
+
+  rabbitmq:
+    environment:
+      RABBITMQ_DEFAULT_USER: ${MAYAN_RABBITMQ_USER:-mayan}
+      RABBITMQ_DEFAULT_PASS: ${MAYAN_RABBITMQ_PASSWORD:-mayanrabbitpass}
+      RABBITMQ_DEFAULT_VHOST: ${MAYAN_RABBITMQ_VHOST:-mayan}
+    image: rabbitmq:4.0.5-management-alpine
+    networks:
+      - mayan
+    restart: unless-stopped
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+
+volumes:
+  app:
+  postgres:
+  redis:
+  rabbitmq: 

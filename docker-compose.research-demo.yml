@@ -1,0 +1,109 @@
+version: '3.9'
+
+x-mayan-container:
+  &mayan-container
+  env_file: docker/.env
+  image: mayanedms/mayanedms:s4.9
+  networks:
+    - mayan
+  restart: unless-stopped
+  volumes:
+    - app_media:/var/lib/mayan
+    # Mount our local research app into the container
+    - ./mayan/apps/research:/opt/mayan-edms/mayan/apps/research:ro
+    # Mount custom settings that includes research app
+    - ./docker/settings_with_research.py:/opt/mayan-edms/mayan/settings/research_demo.py:ro
+
+networks:
+  mayan:
+    driver: bridge
+
+services:
+  app:
+    <<: *mayan-container
+    environment:
+      # Try the default settings for now
+      # DJANGO_SETTINGS_MODULE: mayan.settings.research_demo
+      MAYAN_CELERY_BROKER_URL: "amqp://mayan:mayanrabbitpass@rabbitmq:5672/mayan"
+      MAYAN_CELERY_RESULT_BACKEND: "redis://:mayanredispassword@redis:6379/1"
+      MAYAN_DATABASES: "{'default':{'ENGINE':'django.db.backends.postgresql','NAME':'mayan','PASSWORD':'mayandbpass','USER':'mayan','HOST':'postgresql','PORT':''}}"
+      MAYAN_DATABASE_ENGINE: django.db.backends.postgresql
+      MAYAN_DATABASE_HOST: postgresql
+      MAYAN_DATABASE_NAME: mayan
+      MAYAN_DATABASE_PASSWORD: mayandbpass
+      MAYAN_DATABASE_USER: mayan
+      MAYAN_REDIS_PASSWORD: mayanredispassword
+    ports:
+      - "8080:8000"
+    depends_on:
+      - postgresql
+      - rabbitmq
+      - redis
+
+  postgresql:
+    command:
+      - "postgres"
+      - "-c"
+      - "checkpoint_completion_target=0.6"
+      - "-c"
+      - "default_statistics_target=200"
+      - "-c"
+      - "maintenance_work_mem=128MB"
+      - "-c"
+      - "max_connections=150"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "work_mem=8MB"
+    environment:
+      POSTGRES_DB: mayan
+      POSTGRES_PASSWORD: mayandbpass
+      POSTGRES_USER: mayan
+    image: postgres:16.1-alpine
+    networks:
+      - mayan
+    restart: unless-stopped
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  rabbitmq:
+    environment:
+      RABBITMQ_DEFAULT_USER: mayan
+      RABBITMQ_DEFAULT_PASS: mayanrabbitpass
+      RABBITMQ_DEFAULT_VHOST: mayan
+    image: rabbitmq:3.12-management-alpine
+    networks:
+      - mayan
+    restart: unless-stopped
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+
+  redis:
+    command:
+      - redis-server
+      - --appendonly
+      - "no"
+      - --databases
+      - "3"
+      - --maxmemory
+      - "100mb"
+      - --maxmemory-policy
+      - "allkeys-lru"
+      - --save
+      - ""
+      - --tcp-backlog
+      - "256"
+      - --requirepass
+      - "mayanredispassword"
+    image: redis:7.2-alpine
+    networks:
+      - mayan
+    restart: unless-stopped
+    volumes:
+      - redis:/data
+
+volumes:
+  app_media:
+  postgres:
+  rabbitmq:
+  redis: 
