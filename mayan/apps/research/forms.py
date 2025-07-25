@@ -105,7 +105,7 @@ class StudyForm(forms.ModelForm):
     class Meta:
         model = Study
         fields = (
-            'title', 'description', 'study_type', 'methodology',
+            'title', 'description', 'study_type',
             'start_date', 'end_date', 'status', 'lead_researcher'
         )
         widgets = {
@@ -121,11 +121,6 @@ class StudyForm(forms.ModelForm):
                 'rows': 3,
                 'class': 'form-control',
                 'placeholder': _('Study objectives, methods, and scope...')
-            }),
-            'methodology': forms.Textarea(attrs={
-                'rows': 3,
-                'class': 'form-control',
-                'placeholder': _('Research methodology and approach...')
             }),
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -153,9 +148,6 @@ class StudyForm(forms.ModelForm):
         )
         self.fields['study_type'].help_text = _(
             'Type of research study being conducted'
-        )
-        self.fields['methodology'].help_text = _(
-            'Detailed research methodology and approach'
         )
         
         # Set project context if provided

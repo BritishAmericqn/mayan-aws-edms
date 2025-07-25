@@ -16,6 +16,16 @@ class ResearchApp(MayanAppConfig):
     def ready(self):
         super().ready()
 
+        # Add shared URLs to public access (bypass authentication)
+        from django.conf import settings
+        if hasattr(settings, 'STRONGHOLD_PUBLIC_URLS'):
+            settings.STRONGHOLD_PUBLIC_URLS += (
+                r'^/test-public/$',
+                r'^/shared/[0-9a-f-]+/$',
+                r'^/shared/[0-9a-f-]+/download/$', 
+                r'^/shared/[0-9a-f-]+/preview/$',
+            )
+
         # Simple permission registration only - avoid complex event system
         try:
             from .models import Dataset, DatasetDocument, Project, Study
@@ -70,4 +80,24 @@ class ResearchApp(MayanAppConfig):
             import logging
             logger = logging.getLogger(name=__name__)
             logger.warning(f"Research app permissions setup warning: {e}")
+            pass
+
+    def configure_urls(self):
+        # First call the parent method to register regular URLs under /research/
+        super().configure_urls()
+
+        # Then manually register passthru_urlpatterns at root level
+        try:
+            from django.urls import re_path, include
+            from mayan.urls import urlpatterns as mayan_urlpatterns
+            from .urls.urlpatterns import passthru_urlpatterns
+
+            # Add passthru_urlpatterns directly to root level
+            for pattern in passthru_urlpatterns:
+                mayan_urlpatterns.append(pattern)
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(name=__name__)
+            logger.warning(f"Research app URL configuration warning: {e}")
             pass 

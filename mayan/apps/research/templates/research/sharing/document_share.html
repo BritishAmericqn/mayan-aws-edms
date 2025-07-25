@@ -1,0 +1,180 @@
+{% extends 'appearance/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Share Document" %} - {{ document.label }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <!-- Header Section -->
+            <div class="card border-primary mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-share-alt me-2"></i>
+                        {% trans "Share Document" %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="text-primary">{{ document.label }}</h5>
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-file me-1"></i>
+                                {% if document.file_latest %}
+                                    {{ document.file_latest.filename }}
+                                    ({{ document.file_latest.size|filesizeformat }})
+                                {% else %}
+                                    {% trans "No file available" %}
+                                {% endif %}
+                            </p>
+                            <p class="small text-muted">
+                                {% trans "Create a secure sharing link that external collaborators can use to access this document without requiring a Mayan account." %}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="bg-light p-3 rounded">
+                                <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                                <p class="small mb-0 text-success">
+                                    {% trans "Secure & Tracked" %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sharing Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Create Sharing Link" %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="{{ form.label.id_for_label }}" class="form-label">
+                                        {{ form.label.label }}
+                                    </label>
+                                    {{ form.label }}
+                                    {% if form.label.help_text %}
+                                        <div class="form-text">{{ form.label.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.label.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.label.errors|join:", " }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.expiration_hours.id_for_label }}" class="form-label">
+                                        {{ form.expiration_hours.label }}
+                                    </label>
+                                    {{ form.expiration_hours }}
+                                    {% if form.expiration_hours.help_text %}
+                                        <div class="form-text">{{ form.expiration_hours.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.expiration_hours.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.expiration_hours.errors|join:", " }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors|join:", " }}
+                            </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-link me-2"></i>
+                                    {% trans "Generate Sharing Link" %}
+                                </button>
+                                <a href="{{ document.get_absolute_url }}" class="btn btn-outline-secondary ms-2">
+                                    {% trans "Cancel" %}
+                                </a>
+                            </div>
+                            <div class="text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                {% trans "Links are tracked for compliance" %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Existing Shares -->
+            {% if existing_shares %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Recent Shares" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Label" %}</th>
+                                    <th>{% trans "Created" %}</th>
+                                    <th>{% trans "Expires" %}</th>
+                                    <th>{% trans "Access Count" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for share in existing_shares %}
+                                <tr>
+                                    <td>{{ share.label }}</td>
+                                    <td>{{ share.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>{{ share.expires_at|date:"M d, Y H:i" }}</td>
+                                    <td>{{ share.access_count }}</td>
+                                    <td>
+                                        {% if share.is_expired %}
+                                            <span class="badge bg-danger">{% trans "Expired" %}</span>
+                                        {% elif share.is_active %}
+                                            <span class="badge bg-success">{% trans "Active" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{% trans "Inactive" %}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %} 

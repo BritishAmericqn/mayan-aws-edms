@@ -1,6 +1,8 @@
 """
 Research app events for audit trail and tracking.
 """
+from django.utils.translation import gettext_lazy as _
+
 from mayan.apps.events.classes import EventTypeNamespace
 
 namespace = EventTypeNamespace(
@@ -105,4 +107,18 @@ event_professional_charts_generated = namespace.add_event_type(
 )
 event_quality_indicators_calculated = namespace.add_event_type(
     label='Quality indicators calculated', name='quality_indicators_calculated'
+) 
+
+# Sharing and collaboration events (Task 3.1)
+event_shared_document_created = namespace.add_event_type(
+    label=_('Shared document created'), name='shared_document_created'
+)
+event_shared_document_accessed = namespace.add_event_type(
+    label=_('Shared document accessed'), name='shared_document_accessed'
+)
+event_shared_document_expired = namespace.add_event_type(
+    label=_('Shared document expired'), name='shared_document_expired'
+)
+event_shared_document_deleted = namespace.add_event_type(
+    label=_('Shared document deleted'), name='shared_document_deleted'
 ) 

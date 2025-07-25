@@ -524,3 +524,9 @@ class DatasetDocumentAdmin(admin.ModelAdmin):
             'fields': ('datetime_added',)
         }),
     ) 
+
+# Import and register SharedDocument admin from sharing module
+from .sharing.admin import SharedDocumentAdmin
+from .sharing.models import SharedDocument
+
+# SharedDocument is already registered via @admin.register decorator in sharing.admin 

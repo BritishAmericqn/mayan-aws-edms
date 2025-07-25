@@ -147,7 +147,6 @@ INSTALLED_APPS = (
     'mayan.apps.mailer.apps.MailerApp',
     'mayan.apps.mayan_statistics.apps.StatisticsApp',
     'mayan.apps.metadata.apps.MetadataApp',
-    'mayan.apps.research.apps.ResearchApp',
     'mayan.apps.mirroring.apps.MirroringApp',
     'mayan.apps.ocr.apps.OCRApp',
     'mayan.apps.redactions.apps.RedactionsApp',

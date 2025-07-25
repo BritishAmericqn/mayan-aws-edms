@@ -219,6 +219,35 @@ minio:
 **Pattern**: Add to app's static directory, use collectstatic  
 **Key Insight**: Follow Django's static file conventions
 
+### Django Admin HTML Rendering & Theming (Analysis Display)
+**Problem**: Django admin readonly fields showing raw HTML tags instead of rendered content, poor contrast with white background on dark admin theme  
+**Context**: Implementing real-time analysis results display in Django admin interface  
+**Symptoms**: 
+  1. HTML showing as plain text (`<div style=` instead of rendered div)
+  2. White background clashing with dark admin theme
+  3. Changes not appearing in browser despite server generating correct HTML
+**Attempts**:
+  1. Used `mark_safe()` on individual HTML components - didn't work
+  2. Used `format_html()` with complex HTML - escaped the content
+  3. Tried various CSS color combinations
+  4. Modified styling multiple times but changes didn't appear
+**Solution**: 
+  1. **CRITICAL**: Must set `allow_tags = True` on readonly field method
+  2. Use `mark_safe()` on the entire final HTML output, not individual parts
+  3. Match admin theme colors: dark background (`#2f3349`), white text (`#fff`), blue headers (`#79aec8`)
+  4. Force browser refresh (Ctrl+F5/Cmd+Shift+R) or use incognito mode to bypass caching
+**Root Cause**: 
+  1. Django admin readonly fields automatically escape HTML unless `allow_tags = True` is set
+  2. Browser caching prevented seeing server-side changes
+**Key Insight**: 
+  1. For Django admin HTML display: `allow_tags = True` + `mark_safe()` on final output
+  2. Always match the admin theme colors exactly for seamless integration
+  3. Browser caching issues are common with UI changes - always try hard refresh first
+**Prevention**: 
+  1. Always set `allow_tags = True` for readonly fields that return HTML
+  2. Test UI changes in incognito mode to avoid caching issues
+  3. Use admin theme colors from the start: `#2f3349` (dark bg), `#fff` (text), `#417690` (blue)
+
 ---
 
 ## 🔄 API & Integration
@@ -290,6 +319,9 @@ docker-compose exec app python manage.py shell
 6. **Permission First**: Define comprehensive permissions early - enables proper security model
 7. **Event Integration**: Use Mayan's event system for complete audit trails
 8. **Systematic Verification**: Use evidence-based verification before claiming completion (✅ Critical lesson from Tasks 1.11-1.13)
+9. **Django Admin HTML Display**: For readonly fields returning HTML, always use `allow_tags = True` + `mark_safe()` on final output (✅ Proven in Task 2.2.1)
+10. **Theme Integration First**: Match existing UI themes from the start to avoid rework (✅ Dark admin theme integration)
+11. **Browser Cache Debugging**: When UI changes don't appear, try hard refresh or incognito mode before debugging code (✅ Saved debugging time)
 
 ### What Doesn't Work
 1. **Bypassing Mayan Systems**: Don't create parallel permission/storage systems

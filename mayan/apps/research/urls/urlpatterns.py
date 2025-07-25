@@ -1,20 +1,14 @@
 from django.urls import re_path
 
 from ..views import (
-    # Project views
-    ProjectListView, ProjectDetailView, ProjectCreateView, 
-    ProjectEditView, ProjectDeleteView,
-    
-    # Study views  
-    StudyListView, StudyDetailView, StudyCreateView,
-    StudyEditView, StudyDeleteView,
-    
-    # Dataset views
-    DatasetListView, DatasetDetailView, DatasetCreateView,
-    DatasetEditView, DatasetDeleteView
+    DatasetDeleteView, DatasetDetailView, DatasetEditView, DatasetCreateView,
+    DatasetListView, ProjectCreateView, ProjectDeleteView, ProjectDetailView,
+    ProjectEditView, ProjectListView, StudyCreateView, StudyDeleteView,
+    StudyDetailView, StudyEditView, StudyListView
 )
 
-app_name = 'research'
+# Tasks 3.2-3.3: Import sharing and public views
+from ..views import sharing_views, public_views
 
 urlpatterns = [
     # Project URLs
@@ -70,7 +64,7 @@ urlpatterns = [
         view=StudyDeleteView.as_view(),
         name='study_delete'
     ),
-    
+
     # Dataset URLs
     re_path(
         route=r'^studies/(?P<study_id>\d+)/datasets/$',
@@ -96,5 +90,51 @@ urlpatterns = [
         route=r'^datasets/(?P<dataset_id>\d+)/delete/$',
         view=DatasetDeleteView.as_view(),
         name='dataset_delete'
+    ),
+    
+    # Tasks 3.2-3.3: Sharing URLs (authenticated users only)
+    re_path(
+        route=r'^documents/(?P<document_id>\d+)/share/$',
+        view=sharing_views.DocumentShareView.as_view(),
+        name='document_share'
+    ),
+    re_path(
+        route=r'^documents/(?P<document_id>\d+)/quick-share/$',
+        view=sharing_views.DocumentQuickShareView.as_view(),
+        name='document_quick_share'
+    ),
+    re_path(
+        route=r'^documents/(?P<document_id>\d+)/share/success/$',
+        view=sharing_views.DocumentShareSuccessView.as_view(),
+        name='document_share_success'
+    ),
+    re_path(
+        route=r'^shared-documents/$',
+        view=sharing_views.SharedDocumentListView.as_view(),
+        name='shared_document_list'
+    ),
+] 
+
+# Public URLs that need to be at root level (NO authentication required)
+passthru_urlpatterns = [
+    re_path(
+        route=r'^test-public/$',
+        view=public_views.TestPublicView.as_view(),
+        name='test_public'
+    ),
+    re_path(
+        route=r'^shared/(?P<url_key>[0-9a-f-]+)/$',
+        view=public_views.SharedDocumentAccessView.as_view(),
+        name='shared_document_access'
+    ),
+    re_path(
+        route=r'^shared/(?P<url_key>[0-9a-f-]+)/download/$',
+        view=public_views.SharedDocumentDownloadView.as_view(),
+        name='shared_document_download'
+    ),
+    re_path(
+        route=r'^shared/(?P<url_key>[0-9a-f-]+)/preview/$',
+        view=public_views.SharedDocumentPreviewView.as_view(),
+        name='shared_document_preview'
     ),
 ] 

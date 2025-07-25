@@ -1,0 +1,11 @@
+version: '3.9'
+
+services:
+  app:
+    # Mount our local mayan code to override the container's code
+    volumes:
+      - ./mayan:/opt/mayan-edms/lib/python3.11/site-packages/mayan:ro
+      - ./mayan/apps/research:/opt/mayan-edms/lib/python3.11/site-packages/mayan/apps/research:ro
+    environment:
+      # Ensure Django loads our research app
+      MAYAN_APPS: 'research' 
