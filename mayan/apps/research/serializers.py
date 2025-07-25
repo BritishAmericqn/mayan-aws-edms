@@ -103,15 +103,62 @@ class DatasetSerializer(serializers.ModelSerializer):
 
 
 class DatasetDocumentSerializer(serializers.ModelSerializer):
-    """Serializer for DatasetDocument model."""
+    """Serializer for DatasetDocument (through model)."""
     
-    dataset_title = serializers.CharField(source='dataset.title', read_only=True)
-    document_details = DocumentSerializer(source='document', read_only=True)
+    document_title = serializers.CharField(source='document.label', read_only=True)
+    document_url = serializers.SerializerMethodField()
     
     class Meta:
         model = DatasetDocument
         fields = (
-            'id', 'dataset', 'dataset_title', 'document', 'document_details',
-            'role', 'order', 'notes', 'datetime_added'
+            'id', 'dataset', 'document', 'document_title', 'document_role',
+            'notes', 'order', 'datetime_added', 'document_url'
         )
-        read_only_fields = ('id', 'datetime_added') 
+        read_only_fields = ('id', 'datetime_added')
+    
+    def get_document_url(self, instance):
+        """Return the URL for the document."""
+        from django.urls import reverse
+        try:
+            return reverse(
+                'rest_api:document-detail',
+                kwargs={'document_id': instance.document.pk},
+                request=self.context.get('request')
+            )
+        except Exception:
+            return None
+
+
+class DatasetAnalysisSerializer(serializers.Serializer):
+    """
+    Serializer for dataset analysis requests and responses.
+    Used by APIDatasetAnalysisView for proper Mayan integration.
+    """
+    # Optional request parameters
+    force_reanalysis = serializers.BooleanField(
+        default=False,
+        help_text='Force re-analysis even if results already exist'
+    )
+    
+    analysis_options = serializers.JSONField(
+        default=dict,
+        required=False,
+        help_text='Advanced analysis options (for future use)'
+    )
+    
+    # Response fields (read-only)
+    message = serializers.CharField(read_only=True)
+    dataset_id = serializers.IntegerField(read_only=True)
+    analysis_status = serializers.CharField(read_only=True)
+    estimated_completion = serializers.CharField(read_only=True)
+    next_steps = serializers.ListField(
+        child=serializers.CharField(),
+        read_only=True
+    )
+    demo_note = serializers.CharField(read_only=True)
+    
+    def validate_analysis_options(self, value):
+        """Validate analysis options."""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Analysis options must be a valid JSON object.")
+        return value 

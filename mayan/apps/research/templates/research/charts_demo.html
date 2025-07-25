@@ -1,0 +1,177 @@
+{% extends 'appearance/base.html' %}
+
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans 'Research Charts Demo' %}{% endblock %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'research/css/research.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <h1>{% trans 'Research Data Visualization Demo' %}</h1>
+                <p class="lead">{% trans 'Demonstration of Chart.js integration with professional styling for research data analysis.' %}</p>
+            </div>
+        </div>
+
+        <!-- Chart Examples Row -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="research-chart-container">
+                    <h4>{% trans 'Data Distribution' %}</h4>
+                    <div style="height: 400px;">
+                        <canvas id="demo-histogram"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="research-chart-container">
+                    <h4>{% trans 'Time Series Analysis' %}</h4>
+                    <div style="height: 400px;">
+                        <canvas id="demo-line-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="research-chart-container">
+                    <h4>{% trans 'Category Distribution' %}</h4>
+                    <div style="height: 400px;">
+                        <canvas id="demo-pie-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="research-chart-container">
+                    <h4>{% trans 'Correlation Analysis' %}</h4>
+                    <div style="height: 400px;">
+                        <canvas id="demo-scatter-plot"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Results Container -->
+        <div class="row">
+            <div class="col-12">
+                <div class="research-chart-container">
+                    <h4>{% trans 'Live Analysis Results' %}</h4>
+                    <div id="analysis-charts-container" data-dataset-id="1">
+                        <div class="text-center py-5">
+                            <i class="fa fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+                            <h5>{% trans 'Loading analysis charts...' %}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    {{ block.super }}
+    
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <!-- Research Charts Integration -->
+    <script src="{% static 'research/js/charts.js' %}"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Demo data for charts
+            const demoData = {
+                histogram: {
+                    title: 'Temperature Distribution',
+                    label: 'Frequency',
+                    labels: ['0-5°C', '5-10°C', '10-15°C', '15-20°C', '20-25°C', '25-30°C', '30-35°C'],
+                    values: [12, 25, 45, 67, 89, 56, 23],
+                    xlabel: 'Temperature Range'
+                },
+                lineChart: {
+                    title: 'Monthly Temperature Trends',
+                    label: 'Average Temperature (°C)',
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    values: [8, 10, 14, 18, 22, 26, 28, 27, 24, 19, 13, 9]
+                },
+                pieChart: {
+                    title: 'Data Quality Distribution',
+                    labels: ['Excellent', 'Good', 'Fair', 'Poor'],
+                    values: [65, 25, 8, 2]
+                },
+                scatterPlot: {
+                    title: 'Temperature vs Humidity Correlation',
+                    xlabel: 'Temperature (°C)',
+                    ylabel: 'Humidity (%)',
+                    datasets: [{
+                        label: 'Sensor Readings',
+                        data: [
+                            {x: 20, y: 65}, {x: 25, y: 55}, {x: 30, y: 45}, {x: 15, y: 75},
+                            {x: 22, y: 60}, {x: 28, y: 50}, {x: 18, y: 70}, {x: 32, y: 40}
+                        ]
+                    }]
+                }
+            };
+
+            // Create demo charts
+            ResearchCharts.createHistogram('demo-histogram', demoData.histogram);
+            ResearchCharts.createLineChart('demo-line-chart', demoData.lineChart);
+            ResearchCharts.createPieChart('demo-pie-chart', demoData.pieChart);
+            ResearchCharts.createScatterPlot('demo-scatter-plot', demoData.scatterPlot);
+
+            // Demo analysis results (simulated)
+            const mockAnalysisResults = {
+                professional_charts: {
+                    distributions: [
+                        {
+                            type: 'distribution',
+                            title: 'Research Data Distribution Analysis',
+                            subtitle: 'Statistical analysis of dataset variables',
+                            quality: 'excellent',
+                            statistics: {
+                                mean: 23.5,
+                                median: 22.8,
+                                std: 5.2,
+                                min: 12.1,
+                                max: 35.7,
+                                count: 1250
+                            },
+                            insights: [
+                                'Data shows normal distribution with slight right skew',
+                                'Sample size is sufficient for statistical significance',
+                                'No significant outliers detected in the dataset'
+                            ]
+                        }
+                    ],
+                    summary_dashboard: {
+                        type: 'summary_dashboard',
+                        title: 'Dataset Overview Dashboard',
+                        key_metrics: {
+                            total_records: 1250,
+                            variables: 8,
+                            quality_score: 92.5,
+                            completeness: '98.4%'
+                        },
+                        insights: [
+                            'High quality dataset with excellent completeness',
+                            'All variables show expected statistical properties',
+                            'Ready for advanced analytical techniques'
+                        ]
+                    }
+                }
+            };
+
+            // Simulate loading delay for demo effect
+            setTimeout(function() {
+                ResearchCharts.renderAnalysisCharts(mockAnalysisResults, 'analysis-charts-container');
+            }, 2000);
+        });
+    </script>
+{% endblock %} 

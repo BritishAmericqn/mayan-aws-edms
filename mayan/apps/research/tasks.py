@@ -20,12 +20,18 @@ logger = logging.getLogger(name=__name__)
 
 
 @current_app.task(bind=True, ignore_result=False, max_retries=3, retry_backoff=True)
-def task_analyze_dataset(self, dataset_id, user_id=None):
+def task_analyze_dataset(self, dataset_id, user_id=None, analysis_options=None):
     """
     Enhanced Celery task to analyze a research dataset with professional formatting.
     Now includes Task 2.2 quality indicators and visual polish.
+    
+    Args:
+        dataset_id: ID of the dataset to analyze
+        user_id: ID of the user triggering the analysis (for audit)
+        analysis_options: Optional dict of analysis parameters for future use
     """
-    logger.info(f'Starting enhanced dataset analysis task for dataset {dataset_id}')
+    analysis_options = analysis_options or {}
+    logger.info(f'Starting enhanced dataset analysis task for dataset {dataset_id} with options: {analysis_options}')
     
     try:
         # Get dataset

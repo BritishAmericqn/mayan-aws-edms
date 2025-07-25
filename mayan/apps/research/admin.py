@@ -31,8 +31,20 @@ class DatasetInline(admin.StackedInline):
 class DatasetDocumentInline(admin.TabularInline):
     model = DatasetDocument
     extra = 1
-    fields = ('document', 'document_role', 'order')
+    fields = ('document', 'document_role', 'order', 'notes')
     autocomplete_fields = ('document',)
+    verbose_name = "Associated Document"
+    verbose_name_plural = "📂 Dataset Documents (Associate Existing Documents)"
+    
+    def get_help_text(self):
+        return (
+            "To add documents to this dataset:\n"
+            "1. First upload documents via 'Documents' → 'Add Document'\n"
+            "2. Then select those documents here to associate them with this dataset"
+        )
+    
+    class Meta:
+        help_text = "Associate existing Mayan documents with this dataset"
 
 
 @admin.register(Project)
@@ -137,7 +149,8 @@ class DatasetAdmin(admin.ModelAdmin):
     
     fieldsets = (
         (_('Basic Information'), {
-            'fields': ('title', 'description', 'study')
+            'fields': ('title', 'description', 'study'),
+            'description': 'Basic dataset information and research context.'
         }),
         (_('Dataset Details'), {
             'fields': ('status', 'dataset_type', 'data_collector', 'sample_size')
@@ -152,7 +165,8 @@ class DatasetAdmin(admin.ModelAdmin):
         }),
         (_('Analysis'), {
             'fields': ('analysis_software', 'live_analysis_display'),
-            'classes': ('collapse',)
+            'classes': ('collapse',),
+            'description': 'Enhanced Task 2.2 analysis results appear here after running analysis.'
         }),
         (_('Statistics'), {
             'fields': ('document_count',),
@@ -192,164 +206,46 @@ class DatasetAdmin(admin.ModelAdmin):
     analysis_status_display.short_description = _('Analysis Status')
     
     def live_analysis_display(self, obj):
-        """Live analysis display that uses real documents when available"""
-        if obj.status != 'analyzed':
-            return format_html(
-                '<div style="color: gray; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">'
-                '💡 To see enhanced analysis results:<br/>'
-                '1. Set status to "Ready for Analysis"<br/>'
-                '2. Save the dataset<br/>'
-                '3. Go back to dataset list<br/>'
-                '4. Select dataset and choose "🚀 Run Enhanced Analysis (Task 2.2)" from Actions<br/>'
-                '5. Return here to see live results!'
-                '</div>'
-            )
-        
-        # For analyzed datasets, run live analysis
+        """Display REAL analysis results from actual CSV data"""
+        # Try to run real analysis on the fly
         try:
-            from .analysis.analyzers import StatisticalAnalyzer
-            import io
-            from datetime import datetime
+            from .analysis.real_analyzer import RealCSVAnalyzer
             
-            # Check if we have real documents linked to this dataset
+            # Get documents linked to this dataset
             dataset_documents = obj.documents.filter(
                 datasetdocument__document_role='raw_data'
             )
             
-            analysis_data = None
-            data_source = "Demo Data"
-            error_details = ""
-            
             if dataset_documents.exists():
-                # Try to use real document data
-                try:
-                    doc = dataset_documents.first()
-                    # FIXED: Use proper Mayan API - document.file_latest.open()
-                    if doc.file_latest:
-                        # Read the file content using proper Mayan pattern
-                        with doc.file_latest.open() as file_object:
-                            file_content = file_object.read()
-                        
-                        # Handle both bytes and string content
-                        if isinstance(file_content, bytes):
-                            analysis_data = file_content.decode('utf-8')
-                        else:
-                            analysis_data = str(file_content)
-                            
-                        data_source = f"Real Document: {doc.label}"
-                        error_details = f"✅ Successfully read {len(analysis_data)} characters from real document '{doc.file_latest.filename}'"
-                    else:
-                        error_details = "❌ Document exists but has no file_latest (no file uploaded)"
-                except Exception as e:
-                    error_details = f"❌ Error reading document: {str(e)}"
-                    analysis_data = None
-            else:
-                error_details = "📋 No documents with 'raw_data' role found"
-            
-            # Fallback to demo data if no real documents or error
-            if analysis_data is None:
-                analysis_data = f"""timestamp,temperature_c,humidity_percent,pressure_hpa,air_quality_index,location,wind_speed_ms,solar_radiation_wm2
-2024-01-01 00:00:00,22.5,68.2,1013.2,45,Site_A,3.2,0
-2024-01-01 01:00:00,21.8,69.5,1013.8,48,Site_A,2.8,0
-2024-01-01 02:00:00,21.2,71.1,1014.1,52,Site_A,2.1,0
-2024-01-01 03:00:00,20.8,72.3,1014.5,55,Site_A,1.9,0
-2024-01-01 04:00:00,20.3,73.8,1014.8,58,Site_A,1.5,0
-2024-01-01 05:00:00,19.9,74.9,1015.1,61,Site_A,1.2,0
-2024-01-01 06:00:00,20.1,74.2,1015.0,59,Site_A,1.8,15
-2024-01-01 07:00:00,21.5,71.8,1014.6,54,Site_A,2.3,85
-2024-01-01 08:00:00,23.2,68.9,1014.2,48,Site_A,2.9,165
-2024-01-01 09:00:00,25.1,65.2,1013.7,42,Site_A,3.5,245"""
-                data_source = "Demo Data (Fallback)"
-            
-            # Run enhanced analysis
-            analyzer = StatisticalAnalyzer()
-            file_obj = io.StringIO(analysis_data)
-            results = analyzer.analyze_dataset(file_obj, 'csv')
-            
-            # Extract key results
-            quality_grade = results["demo_highlights"]["key_metrics"]["data_quality_grade"]
-            readiness = results["demo_highlights"]["key_metrics"]["analysis_readiness"]
-            status = results["status"]
-            
-            # Determine if this is real or demo data for display
-            is_real_data = dataset_documents.exists() and "Real Document:" in data_source
-            data_indicator = "🔬 Real Data Analysis" if is_real_data else "🎭 Demo Data Analysis"
-            
-            # Create beautiful display
-            result_html = f"""
-            <div style="font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 8px; border: 1px solid #dee2e6;">
-                <h4 style="color: #2c5aa0; margin-top: 0; display: flex; align-items: center;">
-                    🎉 <span style="margin-left: 8px;">Live Enhanced Task 2.2 Analysis Results</span>
-                </h4>
+                doc = dataset_documents.first()
+                analyzer = RealCSVAnalyzer()
+                results = analyzer.analyze_document(doc)
                 
-                <div style="background: {'#e8f5e8' if is_real_data else '#fff3cd'}; padding: 10px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid {'#28a745' if is_real_data else '#ffc107'};">
-                    <strong style="color: {'#155724' if is_real_data else '#856404'};">{data_indicator}</strong><br/>
-                    <span style="color: #6c757d; font-size: 12px;">Data Source: {data_source}</span><br/>
-                    <span style="color: #6c757d; font-size: 12px;">Documents Linked: {dataset_documents.count()}</span><br/>
-                    <span style="color: #6c757d; font-size: 11px; font-style: italic;">{error_details}</span>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
-                    <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <strong style="color: #28a745; font-size: 14px;">📊 Quality Assessment</strong><br/>
-                        <span style="font-size: 1.4em; font-weight: bold; color: #28a745;">Grade {quality_grade}</span><br/>
-                        <span style="color: #6c757d; font-size: 12px;">Analysis Readiness: {readiness}</span><br/>
-                        <span style="color: #6c757d; font-size: 12px;">Status: {status}</span>
-                    </div>
-                    <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <strong style="color: #007bff; font-size: 14px;">⏰ Analysis Info</strong><br/>
-                        <span style="color: #6c757d; font-size: 12px;">Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</span><br/>
-                        <span style="color: #6c757d; font-size: 12px;">Engine: Enhanced Task 2.2 System</span><br/>
-                        <span style="color: #6c757d; font-size: 12px;">Features: Color-coded quality, Visual polish</span>
-                    </div>
-                </div>
-                
-                <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-top: 3px solid #28a745;">
-                    <strong style="color: #6f42c1; font-size: 14px;">📈 Dataset Summary</strong><br/>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
-                        <div>
-                            <span style="color: #6c757d; font-size: 11px;">SAMPLE SIZE</span><br/>
-                            <strong style="color: #2c5aa0;">{obj.sample_size:,} records</strong>
-                        </div>
-                        <div>
-                            <span style="color: #6c757d; font-size: 11px;">DATA TYPE</span><br/>
-                            <strong style="color: #2c5aa0;">{obj.get_dataset_type_display()}</strong>
-                        </div>
-                        <div>
-                            <span style="color: #6c757d; font-size: 11px;">QUALITY STATUS</span><br/>
-                            <strong style="color: #28a745;">✅ Excellent</strong>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="background: #d4edda; padding: 12px; border-radius: 6px; margin-top: 15px; border-left: 4px solid #28a745;">
-                    <strong style="color: #155724; font-size: 13px;">🎯 Demo Highlights:</strong><br/>
-                    <ul style="color: #155724; margin: 5px 0; padding-left: 20px; font-size: 12px;">
-                        <li>Professional statistical analysis with visual polish</li>
-                        <li>Color-coded quality indicators (Green = Excellent)</li>
-                        <li>Enhanced Task 2.2 features fully active</li>
-                        <li>{'Real document analysis capabilities' if is_real_data else 'Ready for research presentation and demo'}</li>
-                    </ul>
-                </div>
-                
-                {f'''
-                <div style="background: #d1ecf1; padding: 12px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #17a2b8;">
-                    <strong style="color: #0c5460; font-size: 13px;">📄 Troubleshooting Real Data:</strong><br/>
-                    <div style="color: #0c5460; margin: 5px 0; font-size: 12px;">
-                        <strong>Current Status:</strong> {error_details}<br/>
-                        <strong>Quick Fix:</strong><br/>
-                        • Upload CSV via main Mayan interface (not admin)<br/>
-                        • Go to Admin → Dataset Documents → Add<br/>
-                        • Select your dataset and uploaded document<br/>
-                        • Set role to "Raw Data" and save<br/>
-                        • Refresh this page to see real data analysis
-                    </div>
-                </div>
-                ''' if not is_real_data else ''}
-            </div>
-            """
+                if results.get('status') != 'error':
+                    return self._display_real_analysis_results(results)
+                else:
+                    return format_html(
+                        '<div style="color: #dc3545; padding: 15px; border: 1px solid #dc3545; border-radius: 5px;">'
+                        '<h4>❌ Analysis Error</h4>'
+                        '<p><strong>Error:</strong> {message}</p>'
+                        '<p><strong>Suggestion:</strong> {suggestion}</p>'
+                        '</div>',
+                        message=results.get('message', 'Unknown error'),
+                        suggestion=results.get('suggestion', 'Try again')
+                    )
             
-            return format_html(result_html)
+            # If no documents, show helpful message
+            return format_html(
+                '<div style="color: #856404; padding: 15px; border: 1px solid #ffc107; border-radius: 5px; background: #fff3cd;">'
+                '<h4>⚠️ Analysis Not Available</h4>'
+                '<p>No CSV files found for analysis. To see real data insights:</p>'
+                '<ol>'
+                '<li>Associate CSV files with this dataset</li>'
+                '<li>Run the "🚀 Run Enhanced Analysis" action</li>'
+                '<li>Return here to see real analysis results</li>'
+                '</ol>'
+                '</div>'
+            )
             
         except Exception as e:
             return format_html(
@@ -361,51 +257,60 @@ class DatasetAdmin(admin.ModelAdmin):
             )
     
     live_analysis_display.short_description = _('Live Analysis Results')
+    live_analysis_display.allow_tags = True
     
     def run_enhanced_analysis(self, request, queryset):
-        """Run enhanced analysis on selected datasets with live results"""
+        """Run REAL analysis on selected datasets - analyzes your actual CSV files"""
         success_count = 0
         
         for dataset in queryset:
             try:
-                # Import enhanced analysis components
-                from .analysis.analyzers import StatisticalAnalyzer
-                import io
-                from datetime import datetime
+                # Import the REAL analyzer (no more fake demo data)
+                from .analysis.real_analyzer import RealCSVAnalyzer
                 
-                # Create demo data for analysis
-                demo_data = f"""temperature,humidity,pressure,air_quality,location
-22.5,68.2,1013.2,45,Site_A
-23.1,67.8,1012.8,42,Site_B  
-21.9,69.1,1013.5,48,Site_A
-24.2,66.5,1011.9,38,Site_C
-20.8,71.3,1014.1,52,Site_B
-25.1,64.9,1010.5,35,Site_C
-19.8,72.1,1015.2,58,Site_A
-23.5,69.4,1012.1,44,Site_B
-21.2,70.8,1013.8,49,Site_A
-24.8,67.2,1011.5,36,Site_C"""
+                # Get documents linked to this dataset  
+                dataset_documents = dataset.documents.filter(
+                    datasetdocument__document_role='raw_data'
+                )
                 
-                # Run enhanced analysis
-                analyzer = StatisticalAnalyzer()
-                file_obj = io.StringIO(demo_data)
-                results = analyzer.analyze_dataset(file_obj, 'csv')
+                if not dataset_documents.exists():
+                    self.message_user(
+                        request,
+                        f'⚠️ Dataset "{dataset.title}" has no documents with "raw_data" role. Please associate CSV files first.',
+                        messages.WARNING
+                    )
+                    continue
                 
-                # Update dataset status
+                # Get the first document and analyze it with REAL analyzer
+                doc = dataset_documents.first()
+                analyzer = RealCSVAnalyzer()
+                results = analyzer.analyze_document(doc)
+                
+                if results.get('status') == 'error':
+                    self.message_user(
+                        request,
+                        f'❌ Analysis failed for "{dataset.title}": {results["message"]}. {results["suggestion"]}',
+                        messages.ERROR
+                    )
+                    continue
+                
+                # Mark dataset as analyzed (results displayed on-demand)
                 dataset.status = 'analyzed'
                 dataset.save()
+                
                 success_count += 1
                 
-                # Extract detailed results for message
-                quality_grade = results["demo_highlights"]["key_metrics"]["data_quality_grade"]
-                readiness = results["demo_highlights"]["key_metrics"]["analysis_readiness"]
+                # Extract REAL metrics for user feedback
+                summary = results["dataset_summary"]
+                quality = results["data_quality"]
                 
-                # Log success details
+                # Log success with REAL data
                 self.message_user(
                     request,
-                    f'✅ Enhanced analysis completed for "{dataset.title}": '
-                    f'Quality Grade {quality_grade}, {readiness}. '
-                    f'Edit the dataset to see comprehensive live results with Task 2.2 visual polish!',
+                    f'✅ REAL analysis completed for "{dataset.title}": '
+                    f'{summary["total_rows"]} rows × {summary["total_columns"]} columns, '
+                    f'{quality["score"]}% complete ({quality["status"]} quality). '
+                    f'Edit the dataset to see actual data insights!',
                     messages.SUCCESS
                 )
                 
@@ -424,7 +329,7 @@ class DatasetAdmin(admin.ModelAdmin):
                 messages.SUCCESS
             )
     
-    run_enhanced_analysis.short_description = _('🚀 Run Enhanced Analysis (Task 2.2)')
+    run_enhanced_analysis.short_description = _('🔬 Run REAL Data Analysis (No More Fake Values)')
     
     def test_analysis_system(self, request, queryset):
         """Test the enhanced analysis system"""
@@ -476,6 +381,127 @@ class DatasetAdmin(admin.ModelAdmin):
         )
     
     mark_as_analyzed.short_description = _('📊 Mark as Analyzed (Demo)')
+
+    def _display_real_analysis_results(self, results):
+        """Display real analysis results in a simple, readable format"""
+        from django.utils.html import format_html, format_html_join
+        from django.utils.safestring import mark_safe
+        
+        try:
+            if results.get('status') == 'error':
+                return format_html(
+                    '<div style="padding: 15px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">'
+                    '<strong>❌ Analysis Error:</strong> {}<br>'
+                    '<strong>Suggestion:</strong> {}'
+                    '</div>',
+                    results.get('message', 'Unknown error'),
+                    results.get('suggestion', 'Try again')
+                )
+            
+            summary = results.get('dataset_summary', {})
+            quality = results.get('data_quality', {})
+            preview = results.get('data_preview', {})
+            insights = results.get('insights', [])
+            
+            # Quality indicator
+            quality_score = quality.get('score', 0)
+            if quality_score >= 90:
+                quality_badge = mark_safe('<span style="background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 3px;">✅ Excellent</span>')
+            elif quality_score >= 70:
+                quality_badge = mark_safe('<span style="background: #fff3cd; color: #856404; padding: 2px 8px; border-radius: 3px;">⚠️ Good</span>')
+            else:
+                quality_badge = mark_safe('<span style="background: #f8d7da; color: #721c24; padding: 2px 8px; border-radius: 3px;">❌ Poor</span>')
+            
+            # Build proper data preview table
+            preview_html = ""
+            if preview.get('headers') and preview.get('sample_rows'):
+                headers = preview['headers'][:5]  # First 5 columns
+                rows = preview['sample_rows'][:3]  # First 3 rows
+                
+                # Build table headers matching dark theme
+                header_cells = ""
+                for header in headers:
+                    header_cells += f'<th style="padding: 8px; border: 1px solid #417690; background: #417690; color: white; font-weight: bold;">{header}</th>'
+                
+                # Build table rows matching dark theme
+                table_rows = ""
+                for row in rows:
+                    table_rows += '<tr>'
+                    for i, cell in enumerate(row[:5]):  # First 5 cells
+                        cell_value = str(cell)[:30] if len(str(cell)) > 30 else str(cell)  # Truncate long values
+                        table_rows += f'<td style="padding: 8px; border: 1px solid #417690; background: #3a3f58; color: #fff;">{cell_value}</td>'
+                    table_rows += '</tr>'
+                
+                preview_html = mark_safe(f'''
+                <table style="border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 12px; background: #3a3f58;">
+                    <thead>
+                        <tr>{header_cells}</tr>
+                    </thead>
+                    <tbody style="background: #3a3f58;">
+                        {table_rows}
+                    </tbody>
+                </table>
+                <p style="font-style: italic; color: #ccc; font-size: 11px;">{preview.get("showing", "")}</p>
+                ''')
+            else:
+                preview_html = mark_safe('<p style="color: #ccc; font-style: italic;">No data preview available for this dataset.</p>')
+            
+            # Build insights list matching dark theme
+            insights_html = ""
+            if insights:
+                insight_items = ""
+                for insight in insights[:5]:  # First 5 insights
+                    insight_items += f'<li style="margin: 4px 0; color: #fff;">{insight}</li>'
+                insights_html = mark_safe(f'<ul style="margin: 10px 0; padding-left: 25px; color: #fff;">{insight_items}</ul>')
+            else:
+                insights_html = mark_safe('<p style="color: #ccc; font-style: italic;">No insights available for this dataset.</p>')
+            
+            # Match the dark admin theme background
+            return format_html(
+                '''
+                <div style="background: #2f3349; padding: 20px; border: 1px solid #417690; border-radius: 5px; color: #fff;">
+                    <h4 style="color: #79aec8; margin-top: 0; border-bottom: 2px solid #417690; padding-bottom: 10px;">🔬 Real Data Analysis Results</h4>
+                    
+                    <p style="color: #fff;"><strong>📊 Dataset Summary:</strong></p>
+                    <ul style="color: #fff;">
+                        <li><strong>Size:</strong> {} rows × {} columns</li>
+                        <li><strong>Data Types:</strong> {} numeric, {} text columns</li>
+                        <li><strong>Quality:</strong> {}% ({})</li>
+                        <li><strong>Completeness:</strong> {} missing cells out of {}</li>
+                    </ul>
+                    
+                    <p style="color: #fff;"><strong>👁️ Data Preview:</strong></p>
+                    {}
+                    
+                    <p style="color: #fff;"><strong>💡 Key Insights:</strong></p>
+                    {}
+                    
+                    <p style="font-size: 11px; color: #ccc; margin-top: 15px; border-top: 1px solid #417690; padding-top: 10px;">
+                        <strong>Source:</strong> {} ({})
+                    </p>
+                </div>
+                ''',
+                summary.get('total_rows', 0),
+                summary.get('total_columns', 0), 
+                summary.get('numeric_columns', 0),
+                summary.get('text_columns', 0),
+                quality_score,
+                quality.get('status', 'unknown'),
+                quality.get('missing_cells', 0),
+                quality.get('total_cells', 0),
+                preview_html,
+                insights_html,
+                results.get('document_name', 'Unknown'),
+                results.get('file_name', 'Unknown')
+            )
+            
+        except Exception as e:
+            return format_html(
+                '<div style="padding: 15px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">'
+                '<strong>❌ Display Error:</strong> Could not format analysis results: {}'
+                '</div>',
+                str(e)
+            )
 
 
 @admin.register(DatasetDocument)

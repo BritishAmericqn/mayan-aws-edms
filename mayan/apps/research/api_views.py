@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import status
 
 from mayan.apps.rest_api import generics
 
@@ -15,7 +16,11 @@ from .permissions import (
 )
 from .serializers import (
     ProjectSerializer, StudySerializer, DatasetSerializer,
-    DatasetDocumentSerializer
+    DatasetDocumentSerializer, DatasetAnalysisSerializer
+)
+from .literals import (
+    ANALYSIS_STATUS_PENDING, ANALYSIS_STATUS_PROCESSING, 
+    ANALYSIS_STATUS_COMPLETED, ANALYSIS_STATUS_FAILED
 )
 
 
@@ -156,63 +161,149 @@ class APIDatasetDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Dataset.objects.all()
 
 
-class APIDatasetAnalysisView(APIView):
+class APIDatasetAnalysisView(generics.ObjectActionAPIView):
     """
+    Enhanced Analysis API View following proper Mayan patterns.
+    
     get: Return analysis results for the selected dataset.
-    post: Trigger analysis for the selected dataset.
+    post: Trigger analysis for the selected dataset using real task system.
     """
+    action_response_status = status.HTTP_202_ACCEPTED
+    lookup_url_kwarg = 'dataset_id'
     mayan_object_permission_map = {
         'GET': permission_dataset_view,
         'POST': permission_dataset_analyze
     }
+    serializer_class = DatasetAnalysisSerializer
+    source_queryset = Dataset.objects.all()
     
-    def get_dataset(self):
-        """Get the dataset object from URL parameter."""
-        dataset_id = self.kwargs.get('dataset_id')
-        return Dataset.objects.get(pk=dataset_id)
-    
-    def get(self, request, dataset_id):
+    def get(self, request, *args, **kwargs):
         """Return analysis results for the dataset."""
-        dataset = self.get_dataset()
-        return Response({
-            'dataset_id': dataset.pk,
-            'title': dataset.title,
-            'analysis_status': dataset.analysis_status,
-            'analysis_results': dataset.analysis_results or {},
-            'last_analyzed': dataset.datetime_modified.isoformat() if dataset.datetime_modified else None
-        })
-    
-    def post(self, request, dataset_id):
-        """Trigger analysis for the dataset."""
-        dataset = self.get_dataset()
-        
-        # For demo purposes, return immediate mock analysis
-        # In production, this would trigger an async task
-        mock_analysis = {
-            'status': 'completed',
-            'row_count': 1000,
-            'column_count': 8,
-            'data_quality': {
-                'missing_values': 0.05,
-                'data_types': ['numeric', 'categorical', 'datetime'],
-                'completeness': 0.95
-            },
-            'summary_stats': {
-                'mean_age': 42.5,
-                'std_age': 12.3,
-                'categories': ['A', 'B', 'C']
+        try:
+            dataset = self.get_object()
+            
+            # Get analysis status and results from extra_data or model fields
+            analysis_status = getattr(dataset, 'analysis_status', ANALYSIS_STATUS_PENDING)
+            analysis_results = getattr(dataset, 'analysis_results', {})
+            
+            # Determine last analyzed timestamp
+            last_analyzed = None
+            if analysis_status == ANALYSIS_STATUS_COMPLETED and analysis_results:
+                # Try to get timestamp from analysis results or model modification
+                if isinstance(analysis_results, dict) and 'timestamp' in analysis_results:
+                    last_analyzed = analysis_results['timestamp']
+                else:
+                    last_analyzed = dataset.datetime_modified.isoformat() if dataset.datetime_modified else None
+            
+            response_data = {
+                'dataset_id': dataset.pk,
+                'title': dataset.title,
+                'analysis_status': analysis_status,
+                'analysis_results': analysis_results or {},
+                'last_analyzed': last_analyzed,
+                'dataset_info': {
+                    'study': dataset.study.title,
+                    'project': dataset.study.project.title,
+                    'document_count': dataset.documents.count(),
+                    'status': dataset.status
+                }
             }
-        }
-        
-        dataset.analysis_status = 'completed'
-        dataset.analysis_results = mock_analysis
-        dataset.save()
-        
-        return Response({
-            'message': 'Analysis completed successfully',
-            'dataset_id': dataset.pk,
-            'results': mock_analysis
-        })
+            
+            # Add demo-specific enhancements for fast response
+            if analysis_status == ANALYSIS_STATUS_COMPLETED and analysis_results:
+                # Extract key demo highlights for quick display
+                if isinstance(analysis_results, dict):
+                    demo_highlights = analysis_results.get('demo_highlights', {})
+                    if demo_highlights:
+                        response_data['demo_summary'] = {
+                            'quality_grade': demo_highlights.get('key_metrics', {}).get('data_quality_grade', 'N/A'),
+                            'analysis_readiness': demo_highlights.get('key_metrics', {}).get('analysis_readiness', 'Unknown'),
+                            'standout_features': demo_highlights.get('standout_features', [])[:3]  # Top 3 for API
+                        }
+            
+            return Response(response_data)
+            
+        except Dataset.DoesNotExist:
+            return Response(
+                {'error': 'Dataset not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Error retrieving analysis results: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def object_action(self, obj, request, serializer):
+        """
+        Trigger analysis for the dataset using real task system.
+        Follows Mayan's async task submission patterns.
+        """
+        try:
+            from .tasks import task_analyze_dataset
+            
+            # Get validated data from serializer
+            force_reanalysis = serializer.validated_data.get('force_reanalysis', False)
+            analysis_options = serializer.validated_data.get('analysis_options', {})
+            
+            # Check if analysis is already in progress
+            current_status = getattr(obj, 'analysis_status', ANALYSIS_STATUS_PENDING)
+            if current_status == ANALYSIS_STATUS_PROCESSING and not force_reanalysis:
+                return {
+                    'message': 'Analysis already in progress',
+                    'dataset_id': obj.pk,
+                    'analysis_status': current_status,
+                    'note': 'Use force_reanalysis=true to restart'
+                }
+            
+            # Update status to processing immediately for responsive UI
+            if hasattr(obj, 'analysis_status'):
+                obj.analysis_status = ANALYSIS_STATUS_PROCESSING
+            else:
+                # Use extra_data if no direct field
+                extra_data = getattr(obj, 'extra_data', {})
+                extra_data['analysis_status'] = ANALYSIS_STATUS_PROCESSING
+                obj.extra_data = extra_data
+            
+            obj.save()
+            
+            # Submit real analysis task (following Mayan patterns)
+            task_analyze_dataset.apply_async(
+                kwargs={
+                    'dataset_id': obj.pk,
+                    'user_id': request.user.pk,
+                    'analysis_options': analysis_options
+                }
+            )
+            
+            # Return demo-optimized response for fast UI feedback
+            return {
+                'message': 'Dataset analysis started successfully',
+                'dataset_id': obj.pk,
+                'analysis_status': ANALYSIS_STATUS_PROCESSING,
+                'estimated_completion': 'Analysis typically completes within 30 seconds',
+                'next_steps': [
+                    'Analysis is running in the background',
+                    'Use GET endpoint to check results',
+                    'Results will include comprehensive statistics and quality assessment'
+                ],
+                'demo_note': 'Enhanced analysis with Task 2.2 visual polish and quality indicators'
+            }
+            
+        except Exception as e:
+            # Update status to failed on error
+            if hasattr(obj, 'analysis_status'):
+                obj.analysis_status = ANALYSIS_STATUS_FAILED
+            else:
+                extra_data = getattr(obj, 'extra_data', {})
+                extra_data['analysis_status'] = ANALYSIS_STATUS_FAILED
+                obj.extra_data = extra_data
+            obj.save()
+            
+            return Response(
+                {'error': f'Failed to start analysis: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class APIDatasetDocumentListView(generics.ListAPIView):

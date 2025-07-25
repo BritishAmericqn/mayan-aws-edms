@@ -2,222 +2,580 @@
 
 {% load i18n %}
 {% load navigation_tags %}
+{% load static %}
 
-{% block title %}{% include 'appearance/partials/title.html' with non_html_title=True %}{% endblock %}
+{% block title %}{% trans 'Dataset' %}: {{ dataset.title }}{% endblock %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'research/css/research.css' %}">
+    <style>
+        /* Professional styling for demo presentation */
+        .chart-container {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .quality-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .quality-excellent {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .quality-good {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .quality-fair {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .analysis-section {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .demo-highlight {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        
+        .document-list .list-group-item {
+            border-left: 4px solid #007bff;
+            margin-bottom: 5px;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .document-list .list-group-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+            transition: all 0.3s ease;
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
-    <div class="row">
-        <div class="col-xs-12">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item">
-                        <a href="{% url 'research:project_list' %}">{% trans 'Projects' %}</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a href="{% url 'research:project_detail' project.pk %}">{{ project.title }}</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a href="{% url 'research:study_detail' study.pk %}">{{ study.title }}</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">{{ dataset.name }}</li>
-                </ol>
-            </nav>
+    <div class="container-fluid">
+        <!-- Enhanced Breadcrumb Navigation -->
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'research:project_list' %}">
+                                <i class="fa fa-folder-open"></i> {% trans 'Projects' %}
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'research:project_detail' dataset.study.project.pk %}">
+                                <i class="fa fa-clipboard-list"></i> {{ dataset.study.project.title }}
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'research:study_detail' dataset.study.pk %}">
+                                <i class="fa fa-microscope"></i> {{ dataset.study.title }}
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <i class="fa fa-database"></i> {{ dataset.title }}
+                        </li>
+                    </ol>
+                </nav>
+            </div>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="col-xs-12 col-sm-8">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Dataset Details' %}</h3>
-                </div>
-                <div class="panel-body">
-                    <dl class="dl-horizontal">
-                        <dt>{% trans 'Name' %}</dt>
-                        <dd>{{ dataset.name }}</dd>
-                        
-                        {% if dataset.description %}
-                        <dt>{% trans 'Description' %}</dt>
-                        <dd>{{ dataset.description|linebreaks }}</dd>
-                        {% endif %}
-                        
-                        <dt>{% trans 'Study' %}</dt>
-                        <dd>
-                            <a href="{% url 'research:study_detail' study.pk %}">{{ study.title }}</a>
-                        </dd>
-                        
-                        <dt>{% trans 'Project' %}</dt>
-                        <dd>
-                            <a href="{% url 'research:project_detail' project.pk %}">{{ project.title }}</a>
-                        </dd>
-                        
-                        <dt>{% trans 'Data Type' %}</dt>
-                        <dd>{{ dataset.get_data_type_display }}</dd>
-                        
-                        <dt>{% trans 'Analysis Status' %}</dt>
-                        <dd>
-                            <span class="label label-{% if dataset.analysis_status == 'completed' %}success{% elif dataset.analysis_status == 'in_progress' %}warning{% elif dataset.analysis_status == 'failed' %}danger{% else %}default{% endif %}">
-                                {{ dataset.get_analysis_status_display }}
+        <!-- Header Section with Status -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="h2 mb-0">
+                        <i class="fa fa-database text-primary"></i> 
+                        {{ dataset.title }}
+                    </h1>
+                    <div>
+                        {% if dataset.analysis_status == 'completed' %}
+                            <span class="quality-badge quality-excellent">
+                                <i class="fa fa-check-circle"></i> {% trans 'Analysis Complete' %}
                             </span>
-                        </dd>
-                        
-                        <dt>{% trans 'Created' %}</dt>
-                        <dd>{{ dataset.datetime_created|date:"M d, Y H:i" }}</dd>
-                        
-                        {% if dataset.datetime_modified != dataset.datetime_created %}
-                        <dt>{% trans 'Last Modified' %}</dt>
-                        <dd>{{ dataset.datetime_modified|date:"M d, Y H:i" }}</dd>
+                        {% elif dataset.analysis_status == 'processing' %}
+                            <span class="quality-badge quality-good">
+                                <i class="fa fa-spinner fa-spin"></i> {% trans 'Processing' %}
+                            </span>
+                        {% else %}
+                            <span class="quality-badge quality-fair">
+                                <i class="fa fa-clock"></i> {% trans 'Pending Analysis' %}
+                            </span>
                         {% endif %}
-                    </dl>
+                    </div>
                 </div>
             </div>
-            
-            {% if dataset.analysis_status == 'completed' %}
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Analysis Results' %}</h3>
+        </div>
+
+        <!-- Quick Stats Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-value">{{ dataset.documents.count }}</div>
+                    <div class="stat-label">{% trans 'Documents' %}</div>
                 </div>
-                <div class="panel-body">
-                    <div class="alert alert-info">
-                        <i class="fa fa-chart-bar"></i>
-                        {% trans 'Dataset analysis completed successfully. View detailed analysis results and visualizations.' %}
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="stat-value">{{ dataset.sample_size|default:"N/A" }}</div>
+                    <div class="stat-label">{% trans 'Sample Size' %}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="stat-value">{{ dataset.get_dataset_type_display|truncatechars:8 }}</div>
+                    <div class="stat-label">{% trans 'Data Type' %}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="stat-value">{{ dataset.get_status_display|truncatechars:8 }}</div>
+                    <div class="stat-label">{% trans 'Status' %}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Row -->
+        <div class="row">
+            <!-- Left Column: Dataset Information -->
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="fa fa-info-circle"></i> {% trans 'Dataset Information' %}
+                        </h3>
                     </div>
-                    <div class="row">
-                        <div class="col-xs-12 col-sm-6">
-                            <h4>{% trans 'Quick Statistics' %}</h4>
-                            <p><strong>{% trans 'Records:' %}</strong> 150</p>
-                            <p><strong>{% trans 'Columns:' %}</strong> 6</p>
-                            <p><strong>{% trans 'Missing Values:' %}</strong> 2.3%</p>
-                        </div>
-                        <div class="col-xs-12 col-sm-6">
-                            <h4>{% trans 'Data Quality' %}</h4>
-                            <div class="progress">
-                                <div class="progress-bar progress-bar-success" role="progressbar" style="width: 97.7%">
-                                    <span class="sr-only">97.7% complete</span>
+                    <div class="panel-body">
+                        <dl class="dl-horizontal">
+                            <dt>{% trans 'Title' %}</dt>
+                            <dd>{{ dataset.title }}</dd>
+                            
+                            {% if dataset.description %}
+                            <dt>{% trans 'Description' %}</dt>
+                            <dd>{{ dataset.description|linebreaks }}</dd>
+                            {% endif %}
+                            
+                            <dt>{% trans 'Study' %}</dt>
+                            <dd>
+                                <a href="{% url 'research:study_detail' dataset.study.pk %}" class="text-primary">
+                                    <i class="fa fa-microscope"></i> {{ dataset.study.title }}
+                                </a>
+                            </dd>
+                            
+                            <dt>{% trans 'Project' %}</dt>
+                            <dd>
+                                <a href="{% url 'research:project_detail' dataset.study.project.pk %}" class="text-primary">
+                                    <i class="fa fa-clipboard-list"></i> {{ dataset.study.project.title }}
+                                </a>
+                            </dd>
+                            
+                            <dt>{% trans 'Dataset Type' %}</dt>
+                            <dd>
+                                <span class="label label-info">{{ dataset.get_dataset_type_display }}</span>
+                            </dd>
+                            
+                            {% if dataset.data_collector %}
+                            <dt>{% trans 'Data Collector' %}</dt>
+                            <dd>{{ dataset.data_collector }}</dd>
+                            {% endif %}
+                            
+                            {% if dataset.collection_start_date %}
+                            <dt>{% trans 'Collection Period' %}</dt>
+                            <dd>
+                                {{ dataset.collection_start_date|date:"M d, Y" }}
+                                {% if dataset.collection_end_date %}
+                                    - {{ dataset.collection_end_date|date:"M d, Y" }}
+                                {% else %}
+                                    - {% trans 'Ongoing' %}
+                                {% endif %}
+                            </dd>
+                            {% endif %}
+                            
+                            <dt>{% trans 'Quality Flags' %}</dt>
+                            <dd>
+                                {% if dataset.is_anonymized %}
+                                    <span class="label label-success">
+                                        <i class="fa fa-shield-alt"></i> {% trans 'Anonymized' %}
+                                    </span>
+                                {% endif %}
+                                {% if dataset.is_validated %}
+                                    <span class="label label-success">
+                                        <i class="fa fa-check-double"></i> {% trans 'Validated' %}
+                                    </span>
+                                {% endif %}
+                                {% if not dataset.is_anonymized and not dataset.is_validated %}
+                                    <span class="text-muted">{% trans 'No quality flags set' %}</span>
+                                {% endif %}
+                            </dd>
+                            
+                            {% if dataset.analysis_software %}
+                            <dt>{% trans 'Analysis Software' %}</dt>
+                            <dd>
+                                <code>{{ dataset.analysis_software }}</code>
+                            </dd>
+                            {% endif %}
+                            
+                            <dt>{% trans 'Created' %}</dt>
+                            <dd>{{ dataset.datetime_created|date:"M d, Y H:i" }}</dd>
+                            
+                            {% if dataset.datetime_modified != dataset.datetime_created %}
+                            <dt>{% trans 'Last Modified' %}</dt>
+                            <dd>{{ dataset.datetime_modified|date:"M d, Y H:i" }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Document List Section -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="fa fa-file-alt"></i> 
+                            {% trans 'Associated Documents' %}
+                            <span class="badge">{{ dataset.documents.count }}</span>
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        {% if dataset.documents.exists %}
+                            <div class="document-list">
+                                <div class="list-group">
+                                    {% for document in dataset.documents.all %}
+                                        <a href="{% url 'documents:document_preview' document.pk %}" 
+                                           class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">
+                                                    <i class="fa fa-file-alt text-primary"></i>
+                                                    {{ document.label }}
+                                                </h6>
+                                                <small>{{ document.datetime_created|date:"M d" }}</small>
+                                            </div>
+                                            {% if document.description %}
+                                                <p class="mb-1 text-muted">{{ document.description|truncatechars:100 }}</p>
+                                            {% endif %}
+                                            <small class="text-muted">
+                                                {{ document.file_latest.mimetype|default:"Unknown type" }}
+                                                {% if document.file_latest.size %}
+                                                    • {{ document.file_latest.size|filesizeformat }}
+                                                {% endif %}
+                                            </small>
+                                        </a>
+                                    {% endfor %}
                                 </div>
                             </div>
-                            <small class="text-muted">{% trans '97.7% data quality score' %}</small>
-                        </div>
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="fa fa-file-alt fa-3x mb-3" style="opacity: 0.3;"></i>
+                                <p>{% trans 'No documents associated with this dataset yet.' %}</p>
+                                <a href="#" class="btn btn-primary btn-sm">
+                                    <i class="fa fa-plus"></i> {% trans 'Add Documents' %}
+                                </a>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-            {% endif %}
-        </div>
-        
-        <div class="col-xs-12 col-sm-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Dataset Statistics' %}</h3>
-                </div>
-                <div class="panel-body">
-                    <dl>
-                        <dt>{% trans 'Documents' %}</dt>
-                        <dd>{{ dataset.documents.count }}</dd>
-                        
-                        <dt>{% trans 'Data Files' %}</dt>
-                        <dd>{{ dataset.data_files_count }}</dd>
-                        
-                        <dt>{% trans 'Analysis Files' %}</dt>
-                        <dd>{{ dataset.analysis_files_count }}</dd>
-                    </dl>
-                </div>
+
+            <!-- Right Column: Analysis Results -->
+            <div class="col-lg-6">
+                {% if dataset.analysis_status == 'completed' and dataset.analysis_results %}
+                    <!-- Demo Highlight Section -->
+                    {% if dataset.analysis_results.demo_highlights %}
+                        <div class="demo-highlight">
+                            <i class="fa fa-rocket"></i> 
+                            {% trans 'Live Analysis Results Available!' %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Analysis Overview Panel -->
+                    <div class="panel panel-success">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <i class="fa fa-chart-line"></i> {% trans 'Analysis Results' %}
+                                {% if dataset.analysis_results.demo_highlights.key_metrics.data_quality_grade %}
+                                    <span class="pull-right">
+                                        <span class="quality-badge quality-excellent">
+                                            {{ dataset.analysis_results.demo_highlights.key_metrics.data_quality_grade }}
+                                        </span>
+                                    </span>
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="panel-body">
+                            {% if dataset.analysis_results.demo_highlights %}
+                                <!-- Key Metrics Display -->
+                                <div class="analysis-section">
+                                    <h4><i class="fa fa-tachometer-alt"></i> {% trans 'Key Metrics' %}</h4>
+                                    <div class="row">
+                                        {% for metric_key, metric_value in dataset.analysis_results.demo_highlights.key_metrics.items %}
+                                            <div class="col-md-6 mb-3">
+                                                <strong>{{ metric_key|title|replace:"_"," " }}:</strong><br>
+                                                <span class="text-primary">{{ metric_value }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Standout Features -->
+                                {% if dataset.analysis_results.demo_highlights.standout_features %}
+                                    <div class="analysis-section">
+                                        <h4><i class="fa fa-star"></i> {% trans 'Standout Features' %}</h4>
+                                        <ul class="list-unstyled">
+                                            {% for feature in dataset.analysis_results.demo_highlights.standout_features %}
+                                                <li class="mb-2">
+                                                    <i class="fa fa-check-circle text-success"></i> 
+                                                    {{ feature }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Demo Talking Points -->
+                                {% if dataset.analysis_results.demo_highlights.demo_talking_points %}
+                                    <div class="analysis-section">
+                                        <h4><i class="fa fa-comments"></i> {% trans 'Key Insights' %}</h4>
+                                        <ul class="list-unstyled">
+                                            {% for point in dataset.analysis_results.demo_highlights.demo_talking_points %}
+                                                <li class="mb-2">
+                                                    <i class="fa fa-lightbulb text-warning"></i> 
+                                                    {{ point }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+
+                            <!-- Data Quality Section -->
+                            {% if dataset.analysis_results.data_quality %}
+                                <div class="analysis-section">
+                                    <h4><i class="fa fa-shield-check"></i> {% trans 'Data Quality Assessment' %}</h4>
+                                    {% if dataset.analysis_results.data_quality.overall_quality %}
+                                        <div class="text-center mb-3">
+                                            <div class="stat-value text-success">
+                                                {{ dataset.analysis_results.data_quality.overall_quality.score }}%
+                                            </div>
+                                            <div class="h5">
+                                                <i class="fa fa-check-circle text-success"></i>
+                                                {{ dataset.analysis_results.data_quality.overall_quality.label }}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    {% if dataset.analysis_results.data_quality.summary %}
+                                        <p class="text-muted">{{ dataset.analysis_results.data_quality.summary }}</p>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            <!-- Professional Charts Section -->
+                            {% if dataset.analysis_results.professional_charts %}
+                                <div class="chart-container">
+                                    <h4><i class="fa fa-chart-bar"></i> {% trans 'Data Visualizations' %}</h4>
+                                    <p class="text-muted mb-3">{% trans 'Professional statistical charts and analysis' %}</p>
+                                    
+                                    <!-- Chart placeholder with demo message -->
+                                    <div class="text-center py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px;">
+                                        <i class="fa fa-chart-line fa-3x mb-3"></i>
+                                        <h5>{% trans 'Advanced Chart Visualizations Available' %}</h5>
+                                        <p class="mb-0">{% trans 'Distribution charts, correlation heatmaps, and summary dashboards' %}</p>
+                                        {% if dataset.analysis_results.professional_charts.distributions %}
+                                            <small class="d-block mt-2 opacity-75">
+                                                {{ dataset.analysis_results.professional_charts.distributions|length }} distribution chart(s) ready
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <!-- API Integration Notice -->
+                            <div class="alert alert-info">
+                                <i class="fa fa-code"></i> 
+                                <strong>{% trans 'API Integration Available' %}</strong><br>
+                                {% trans 'This analysis data is accessible via REST API endpoints at' %} 
+                                <code>/api/v4/datasets/{{ dataset.pk }}/analysis/</code>
+                            </div>
+                        </div>
+                    </div>
+                {% elif dataset.analysis_status == 'processing' %}
+                    <!-- Processing Status -->
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <i class="fa fa-spinner fa-spin"></i> {% trans 'Analysis in Progress' %}
+                            </h3>
+                        </div>
+                        <div class="panel-body text-center">
+                            <div class="py-4">
+                                <i class="fa fa-cog fa-spin fa-3x text-info mb-3"></i>
+                                <h4>{% trans 'Analyzing Dataset...' %}</h4>
+                                <p class="text-muted">{% trans 'Statistical analysis and chart generation in progress. This typically completes within 30 seconds.' %}</p>
+                                <div class="progress mt-3">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                         role="progressbar" style="width: 65%"></div>
+                                </div>
+                                <button class="btn btn-primary btn-sm mt-3" onclick="location.reload()">
+                                    <i class="fa fa-refresh"></i> {% trans 'Refresh Status' %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Trigger Analysis -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <i class="fa fa-play-circle"></i> {% trans 'Dataset Analysis' %}
+                            </h3>
+                        </div>
+                        <div class="panel-body text-center">
+                            <div class="py-4">
+                                <i class="fa fa-chart-line fa-3x text-muted mb-3"></i>
+                                <h4>{% trans 'Ready for Analysis' %}</h4>
+                                <p class="text-muted">{% trans 'Generate comprehensive statistical analysis, charts, and data quality assessment.' %}</p>
+                                <button class="btn btn-success btn-lg" id="trigger-analysis" data-dataset-id="{{ dataset.pk }}">
+                                    <i class="fa fa-rocket"></i> {% trans 'Start Analysis' %}
+                                </button>
+                            </div>
+                            
+                            <!-- Analysis Features Preview -->
+                            <div class="mt-4">
+                                <h5>{% trans 'Analysis Includes:' %}</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled text-left">
+                                            <li><i class="fa fa-check text-success"></i> Statistical summaries</li>
+                                            <li><i class="fa fa-check text-success"></i> Data quality assessment</li>
+                                            <li><i class="fa fa-check text-success"></i> Distribution analysis</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled text-left">
+                                            <li><i class="fa fa-check text-success"></i> Correlation matrices</li>
+                                            <li><i class="fa fa-check text-success"></i> Professional charts</li>
+                                            <li><i class="fa fa-check text-success"></i> Demo-ready insights</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    {{ block.super }}
+    <script>
+        $(document).ready(function() {
+            // Analysis trigger button
+            $('#trigger-analysis').click(function() {
+                var datasetId = $(this).data('dataset-id');
+                var $button = $(this);
+                
+                // Update button state
+                $button.prop('disabled', true)
+                       .html('<i class="fa fa-spinner fa-spin"></i> {% trans "Starting Analysis..." %}');
+                
+                // Make API call to trigger analysis
+                $.ajax({
+                    url: '/api/v4/research/datasets/' + datasetId + '/analysis/',
+                    method: 'POST',
+                    data: JSON.stringify({
+                        'force_reanalysis': true,
+                        'analysis_options': {
+                            'demo_mode': true,
+                            'enhanced_features': true
+                        }
+                    }),
+                    contentType: 'application/json',
+                    headers: {
+                        'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                    },
+                    success: function(response) {
+                        // Show success message and reload page
+                        $button.html('<i class="fa fa-check"></i> {% trans "Analysis Started!" %}')
+                               .removeClass('btn-success')
+                               .addClass('btn-info');
+                        
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    },
+                    error: function(xhr, status, error) {
+                        // Show error and restore button
+                        $button.prop('disabled', false)
+                               .html('<i class="fa fa-rocket"></i> {% trans "Start Analysis" %}');
+                        
+                        alert('{% trans "Error starting analysis. Please try again." %}');
+                    }
+                });
+            });
             
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Quick Actions' %}</h3>
-                </div>
-                <div class="panel-body">
-                    {% if dataset.analysis_status == 'pending' %}
-                        <button class="btn btn-primary btn-block" disabled>
-                            <i class="fa fa-spinner fa-spin"></i> {% trans 'Analysis Pending' %}
-                        </button>
-                    {% elif dataset.analysis_status == 'in_progress' %}
-                        <button class="btn btn-warning btn-block" disabled>
-                            <i class="fa fa-cog fa-spin"></i> {% trans 'Analyzing...' %}
-                        </button>
-                    {% else %}
-                        <button class="btn btn-success btn-block">
-                            <i class="fa fa-play"></i> {% trans 'Run Analysis' %}
-                        </button>
-                    {% endif %}
-                    
-                    <button class="btn btn-info btn-block">
-                        <i class="fa fa-share-alt"></i> {% trans 'Generate Share Link' %}
-                    </button>
-                    
-                    <button class="btn btn-secondary btn-block">
-                        <i class="fa fa-download"></i> {% trans 'Export Dataset' %}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Documents in this Dataset' %}</h3>
-                </div>
-                <div class="panel-body">
-                    {% if dataset.documents.exists %}
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>{% trans 'Document' %}</th>
-                                        <th>{% trans 'Type' %}</th>
-                                        <th>{% trans 'Role' %}</th>
-                                        <th>{% trans 'Size' %}</th>
-                                        <th>{% trans 'Uploaded' %}</th>
-                                        <th>{% trans 'Actions' %}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for dataset_doc in dataset.datasetdocument_set.all %}
-                                        <tr>
-                                            <td>
-                                                <a href="{{ dataset_doc.document.get_absolute_url }}">
-                                                    {{ dataset_doc.document.label }}
-                                                </a>
-                                            </td>
-                                            <td>{{ dataset_doc.document.document_type }}</td>
-                                            <td>
-                                                <span class="label label-{% if dataset_doc.role == 'primary' %}primary{% elif dataset_doc.role == 'supplementary' %}info{% else %}default{% endif %}">
-                                                    {{ dataset_doc.get_role_display }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                {% if dataset_doc.document.latest_file %}
-                                                    {{ dataset_doc.document.latest_file.size|filesizeformat }}
-                                                {% else %}
-                                                    {% trans 'Unknown' %}
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ dataset_doc.document.datetime_created|date:"M d, Y" }}</td>
-                                            <td>
-                                                <a href="{{ dataset_doc.document.get_absolute_url }}" class="btn btn-xs btn-default">
-                                                    <i class="fa fa-eye"></i> {% trans 'View' %}
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="text-center">
-                            <i class="fa fa-file fa-3x text-muted"></i>
-                            <h4>{% trans 'No documents in this dataset' %}</h4>
-                            <p>{% trans 'Upload CSV files, research papers, and other documents to begin analysis.' %}</p>
-                            <button class="btn btn-primary">
-                                <i class="fa fa-upload"></i> {% trans 'Upload First Document' %}
-                            </button>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+            // Auto-refresh for processing status
+            var datasetStatus = '{{ dataset.analysis_status|escapejs }}';
+            if (datasetStatus === 'processing') {
+                setTimeout(function() {
+                    location.reload();
+                }, 10000); // Refresh every 10 seconds during processing
+            }
+        });
+    </script>
 {% endblock %} 

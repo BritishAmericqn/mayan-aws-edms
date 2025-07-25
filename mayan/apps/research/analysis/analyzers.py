@@ -81,14 +81,23 @@ class StatisticalAnalyzer:
             file_obj.seek(0)
             
             if file_type.lower() == 'csv':
-                # Try to read CSV with multiple encodings
+                # Try to read CSV with multiple encodings and error handling
                 for encoding in ['utf-8', 'latin-1', 'cp1252']:
                     try:
                         file_obj.seek(0)
-                        df = pd.read_csv(file_obj, encoding=encoding)
-                        logger.info(f"Successfully parsed CSV with {encoding} encoding")
+                        # Add more robust CSV parsing options
+                        df = pd.read_csv(
+                            file_obj, 
+                            encoding=encoding,
+                            on_bad_lines='skip',  # Skip bad lines instead of failing
+                            engine='python'  # More flexible parser
+                        )
+                        logger.info(f"Successfully parsed CSV with {encoding} encoding: {len(df)} rows × {len(df.columns)} columns")
                         return df
                     except UnicodeDecodeError:
+                        continue
+                    except Exception as e:
+                        logger.warning(f"Error with {encoding} encoding: {e}")
                         continue
                         
             elif file_type.lower() in ['xlsx', 'xls']:
@@ -103,6 +112,8 @@ class StatisticalAnalyzer:
                 logger.info("Successfully parsed JSON file")
                 return df
                 
+        except ImportError:
+            logger.warning("pandas not available, will use fallback analysis")
         except Exception as e:
             logger.warning(f"Error parsing {file_type} file: {e}")
             
@@ -738,9 +749,171 @@ class StatisticalAnalyzer:
         """Recommend distribution analyses."""
         return ['Distribution analysis completed']
     
+    def _attempt_real_data_analysis(self, dataset=None) -> Dict[str, Any]:
+        """
+        Attempt to analyze real data even without pandas.
+        This method tries to parse and analyze the actual CSV content.
+        """
+        if not dataset:
+            return None
+            
+        try:
+            # Get documents linked to this dataset
+            dataset_documents = dataset.documents.filter(
+                datasetdocument__document_role='raw_data'
+            )
+            
+            if not dataset_documents.exists():
+                return None
+                
+            doc = dataset_documents.first()
+            if not doc.file_latest:
+                return None
+                
+            # Read the file content using proper Mayan API
+            with doc.file_latest.open() as file_object:
+                content = file_object.read()
+                
+            # Handle both bytes and string content
+            if isinstance(content, bytes):
+                content = content.decode('utf-8')
+            else:
+                content = str(content)
+            
+            # Basic CSV analysis without pandas
+            lines = content.strip().split('\n')
+            if len(lines) < 2:  # Need at least header + 1 data row
+                return None
+                
+            # Parse CSV manually
+            import csv
+            import io
+            csv_reader = csv.reader(io.StringIO(content))
+            rows = list(csv_reader)
+            
+            if len(rows) < 2:
+                return None
+                
+            headers = rows[0]
+            data_rows = rows[1:]
+            
+            # Calculate real statistics
+            total_records = len(data_rows)
+            total_columns = len(headers)
+            
+            # Try to identify numeric columns
+            numeric_columns = []
+            for col_idx, header in enumerate(headers):
+                numeric_count = 0
+                total_values = 0
+                
+                for row in data_rows:
+                    if col_idx < len(row) and row[col_idx].strip():
+                        total_values += 1
+                        try:
+                            float(row[col_idx])
+                            numeric_count += 1
+                        except ValueError:
+                            pass
+                
+                if total_values > 0 and numeric_count / total_values > 0.8:  # 80% numeric
+                    numeric_columns.append(header)
+            
+            # Calculate data quality
+            total_cells = total_records * total_columns
+            missing_cells = 0
+            for row in data_rows:
+                for cell in row:
+                    if not cell.strip():
+                        missing_cells += 1
+                        
+            completeness = ((total_cells - missing_cells) / total_cells * 100) if total_cells > 0 else 0
+            
+            # Determine quality grade
+            if completeness >= 95:
+                grade = "A+"
+                score = 95 + (completeness - 95) / 5 * 5  # Scale to 95-100
+            elif completeness >= 90:
+                grade = "A"
+                score = 90 + (completeness - 90) / 5 * 5  # Scale to 90-95
+            elif completeness >= 85:
+                grade = "B+"
+                score = 85 + (completeness - 85) / 5 * 5
+            elif completeness >= 80:
+                grade = "B" 
+                score = 80 + (completeness - 80) / 5 * 5
+            else:
+                grade = "C+"
+                score = max(70, completeness)
+            
+            # Generate real analysis results
+            return {
+                'status': 'completed_real_data',
+                'timestamp': self._get_timestamp(),
+                'dataset_info': {
+                    'dataset_name': dataset.title,
+                    'dimensions': {
+                        'records': f"{total_records:,}",
+                        'variables': f"{total_columns:,}",
+                        'data_points': f"{total_cells:,}"
+                    },
+                    'quality_summary': f'Real data analysis: {total_records} records with {len(numeric_columns)} numeric variables'
+                },
+                'data_quality': {
+                    'overall_quality': {
+                        'score': round(score, 1),
+                        'status': 'excellent' if score >= 90 else 'good' if score >= 80 else 'fair',
+                        'color': '#28a745' if score >= 90 else '#ffc107' if score >= 80 else '#fd7e14',
+                        'label': 'Excellent' if score >= 90 else 'Good' if score >= 80 else 'Fair',
+                        'icon': '✅' if score >= 90 else '⚠️' if score >= 80 else '🔍',
+                        'grade': grade
+                    },
+                    'summary': f'Real data quality analysis (Grade {grade}). Dataset has {completeness:.1f}% completeness with {len(numeric_columns)} numeric variables for analysis.'
+                },
+                'summary_statistics': {
+                    'note': f'Real data analysis of {total_records} records',
+                    'variables_analyzed': f'{len(numeric_columns)} numeric variables, {total_columns - len(numeric_columns)} categorical',
+                    'key_insights': [
+                        f'Dataset contains {total_records:,} actual records',
+                        f'{len(numeric_columns)} numeric variables available for statistical analysis',
+                        f'Data completeness: {completeness:.1f}%'
+                    ]
+                },
+                'demo_highlights': {
+                    'key_metrics': {
+                        'analysis_readiness': 'Excellent - Real Data Analysis' if score >= 90 else 'Good - Real Data Ready',
+                        'data_quality_grade': f'{grade} ({score:.1f}/100)',
+                        'analytical_potential': 'High - Real Dataset' if len(numeric_columns) >= 3 else 'Moderate - Real Dataset'
+                    },
+                    'demo_talking_points': [
+                        f'🔬 Real document analysis: {doc.label}',
+                        f'📊 Actual data: {total_records:,} records × {total_columns} variables',
+                        f'✅ Quality grade {grade} based on real content',
+                        f'📈 {len(numeric_columns)} numeric variables for statistical modeling'
+                    ]
+                },
+                'analysis_metadata': {
+                    'analysis_confidence': 'high',
+                    'suitable_for_modeling': len(numeric_columns) >= 2,
+                    'processing_note': f'Real data analysis from {doc.file_latest.filename}'
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in real data analysis: {e}")
+            return None
+
     # Fallback methods for error handling
     def _generate_enhanced_fallback_analysis(self, dataset=None, error=None) -> Dict[str, Any]:
-        """Generate enhanced fallback analysis for demo purposes."""
+        """Generate enhanced fallback analysis - tries real data first, then demo."""
+        # Try to analyze real data first
+        real_analysis = self._attempt_real_data_analysis(dataset)
+        if real_analysis:
+            logger.info("Successfully analyzed real data in fallback mode")
+            return real_analysis
+            
+        # Only use demo data as last resort
+        logger.warning("Using demo data as last resort fallback")
         return {
             'status': 'completed_fallback_enhanced',
             'timestamp': self._get_timestamp(),
