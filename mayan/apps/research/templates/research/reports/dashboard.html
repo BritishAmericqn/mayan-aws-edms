@@ -1,0 +1,436 @@
+{% extends 'appearance/base.html' %}
+
+{% load i18n %}
+{% load appearance_tags %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-pdf"></i> {{ page_title }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Demo Notice -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>{% trans "Demo Mode:" %}</strong> {{ demo_note }}
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-primary">{{ total_reports }}</h3>
+                                    <p class="mb-0">{% trans "Total Reports" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-success">{% trans "Available" %}</h3>
+                                    <p class="mb-0">{% trans "PDF Generation" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-info">{{ report_types|length }}</h3>
+                                    <p class="mb-0">{% trans "Report Types" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-warning">{% trans "Ready" %}</h3>
+                                    <p class="mb-0">{% trans "System Status" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Report Types -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>{% trans "Available Report Types" %}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        {% for report_type in report_types %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="border rounded p-3">
+                                                <h6 class="text-primary">{{ report_type.label }}</h6>
+                                                <p class="text-muted small mb-2">
+                                                    {% if report_type.value == 'compliance' %}
+                                                        {% trans "Generate comprehensive compliance and security reports" %}
+                                                    {% elif report_type.value == 'research_summary' %}
+                                                        {% trans "Summarize research projects, studies, and datasets" %}
+                                                    {% elif report_type.value == 'audit_trail' %}
+                                                        {% trans "Detailed audit trail and activity reports" %}
+                                                    {% elif report_type.value == 'security_analysis' %}
+                                                        {% trans "Security analysis and risk assessment reports" %}
+                                                    {% endif %}
+                                                </p>
+                                                <button class="btn btn-sm btn-primary demo-report-btn" 
+                                                        data-report-type="{{ report_type.value }}"
+                                                        data-report-name="{{ report_type.label }}">
+                                                    <i class="fas fa-file-pdf"></i> {% trans "Generate Demo Report" %}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Information -->
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>{% trans "System Information" %}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <strong>{% trans "Backend Status:" %}</strong>
+                                        <span class="badge bg-success">{% trans "Working" %}</span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>{% trans "Database:" %}</strong>
+                                        <span class="badge bg-warning">{% trans "Migration Pending" %}</span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>{% trans "PDF Engine:" %}</strong>
+                                        <span class="badge bg-info">{% trans "Available" %}</span>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <h6>{% trans "Recent Activity" %}</h6>
+                                    {% if recent_reports %}
+                                        {% for report in recent_reports %}
+                                        <div class="small mb-2">
+                                            <i class="fas fa-file-pdf text-muted"></i>
+                                            {{ report.title|truncatechars:30 }}
+                                            <br>
+                                            <span class="text-muted">{{ report.created_at|timesince }} {% trans "ago" %}</span>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted small">{% trans "No recent reports" %}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5>{% trans "Next Steps" %}</h5>
+                                    <p class="text-muted">{% trans "Complete database migrations to enable full PDF report generation" %}</p>
+                                    
+                                    <div class="btn-group" role="group">
+                                        <a href="/admin/research/" class="btn btn-primary">
+                                            <i class="fas fa-cog"></i> {% trans "Admin Interface" %}
+                                        </a>
+                                        <a href="/research/compliance/dashboard/" class="btn btn-success">
+                                            <i class="fas fa-chart-dashboard"></i> {% trans "Compliance Dashboard" %}
+                                        </a>
+                                        <a href="/research/projects/" class="btn btn-info">
+                                            <i class="fas fa-folder"></i> {% trans "Research Projects" %}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Demo Report Modal -->
+<div class="modal fade" id="demoReportModal" tabindex="-1" aria-labelledby="demoReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="demoReportModalLabel">
+                    <i class="fas fa-file-pdf"></i> <span id="reportTypeName">Report</span> Preview
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reportContent">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Close" %}</button>
+                <button type="button" class="btn btn-primary" id="downloadDemoReport">
+                    <i class="fas fa-download"></i> {% trans "Download Demo PDF" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Demo report generation
+    const demoReportBtns = document.querySelectorAll('.demo-report-btn');
+    const demoModal = new bootstrap.Modal(document.getElementById('demoReportModal'));
+    
+    demoReportBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const reportType = this.getAttribute('data-report-type');
+            const reportName = this.getAttribute('data-report-name');
+            
+            document.getElementById('reportTypeName').textContent = reportName;
+            document.getElementById('reportContent').innerHTML = generateDemoReportContent(reportType);
+            
+            demoModal.show();
+        });
+    });
+    
+    // Download demo report
+    document.getElementById('downloadDemoReport').addEventListener('click', function() {
+        // Create a demo "download" experience
+        const link = document.createElement('a');
+        link.download = 'demo-report.pdf';
+        link.href = 'data:application/pdf;base64,JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVGl0bGUgKERlbW8gUmVwb3J0KQovQ3JlYXRvciAoTWF5YW4gRURNUyBSZXNlYXJjaCBQbGF0Zm9ybSkKPj4KZW5kb2JqCnhyZWYKMCAwCnRyYWlsZXIKPDwKL1NpemUgMQovUm9vdCAxIDAgUgo+PgpzdGFydHhyZWYKMTA5CiUlRU9G';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success message
+        const alertHtml = `
+            <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                <i class="fas fa-check-circle"></i> Demo PDF downloaded successfully!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        document.querySelector('.card-body').insertAdjacentHTML('afterbegin', alertHtml);
+        
+        demoModal.hide();
+    });
+    
+    function generateDemoReportContent(reportType) {
+        const commonData = {
+            projects: 3,
+            studies: 2,
+            datasets: 1,
+            shared_documents: 1,
+            total_events: 15,
+            security_score: 78
+        };
+        
+        switch(reportType) {
+            case 'compliance':
+                return `
+                    <div class="report-preview">
+                        <h5><i class="fas fa-clipboard-check text-success"></i> Compliance Report Summary</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="metric-card">
+                                    <h6>Security Compliance</h6>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-success" style="width: ${commonData.security_score}%">${commonData.security_score}%</div>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <h6>Document Sharing</h6>
+                                    <p><strong>${commonData.shared_documents}</strong> active shares with proper expiration</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="metric-card">
+                                    <h6>Audit Trail</h6>
+                                    <p><strong>${commonData.total_events}</strong> events tracked across all systems</p>
+                                </div>
+                                <div class="metric-card">
+                                    <h6>Access Control</h6>
+                                    <p>✅ Multi-level permissions active</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            case 'research_summary':
+                return `
+                    <div class="report-preview">
+                        <h5><i class="fas fa-microscope text-info"></i> Research Summary Report</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="metric-card text-center">
+                                    <h3 class="text-primary">${commonData.projects}</h3>
+                                    <p>Active Projects</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-card text-center">
+                                    <h3 class="text-success">${commonData.studies}</h3>
+                                    <p>Research Studies</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-card text-center">
+                                    <h3 class="text-warning">${commonData.datasets}</h3>
+                                    <p>Datasets Analyzed</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h6>Recent Projects:</h6>
+                            <ul>
+                                <li>Climate Change Research 2024 (Active)</li>
+                                <li>Urban Development Study (In Progress)</li>
+                                <li>Water Quality Analysis (Completed)</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            case 'audit_trail':
+                return `
+                    <div class="report-preview">
+                        <h5><i class="fas fa-history text-primary"></i> Audit Trail Report</h5>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="timeline-preview">
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker bg-success"></div>
+                                        <div class="timeline-content">
+                                            <strong>Project Created</strong><br>
+                                            <small class="text-muted">Climate Change Research 2024 - 2 hours ago</small>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker bg-info"></div>
+                                        <div class="timeline-content">
+                                            <strong>Document Shared</strong><br>
+                                            <small class="text-muted">Research findings shared externally - 4 hours ago</small>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker bg-warning"></div>
+                                        <div class="timeline-content">
+                                            <strong>Security Scan</strong><br>
+                                            <small class="text-muted">Automated security check completed - 6 hours ago</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            case 'security_analysis':
+                return `
+                    <div class="report-preview">
+                        <h5><i class="fas fa-shield-alt text-danger"></i> Security Analysis Report</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="security-metric">
+                                    <h6>Overall Security Score</h6>
+                                    <div class="progress mb-2" style="height: 20px;">
+                                        <div class="progress-bar bg-success" style="width: ${commonData.security_score}%">
+                                            ${commonData.security_score}% Secure
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="security-metric">
+                                    <h6>Risk Assessment</h6>
+                                    <span class="badge bg-success">Low Risk</span>
+                                    <span class="badge bg-warning">2 Medium</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="security-metric">
+                                    <h6>Security Events (7 days)</h6>
+                                    <p><strong>12</strong> scans performed</p>
+                                    <p><strong>0</strong> security violations</p>
+                                </div>
+                                <div class="security-metric">
+                                    <h6>Recommendations</h6>
+                                    <ul class="small">
+                                        <li>✅ Strong access controls</li>
+                                        <li>✅ Regular audit logging</li>
+                                        <li>⚠️ Consider shortening share expiration</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            default:
+                return '<p>Report preview not available for this type.</p>';
+        }
+    }
+});
+</script>
+
+<style>
+.report-preview {
+    min-height: 300px;
+}
+
+.metric-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #007bff;
+}
+
+.timeline-preview {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -35px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.security-metric {
+    margin-bottom: 1rem;
+}
+
+.demo-report-btn {
+    transition: all 0.3s ease;
+}
+
+.demo-report-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %} 

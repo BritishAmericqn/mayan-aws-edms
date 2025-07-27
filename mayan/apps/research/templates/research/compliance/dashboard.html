@@ -1,0 +1,495 @@
+{% extends "appearance/base.html" %}
+{% load i18n %}
+{% load humanize %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    :root {
+        --primary-color: #0d6efd;
+        --success-color: #198754;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --info-color: #0dcaf0;
+        --dark-color: #212529;
+    }
+
+    .dashboard-container {
+        padding: 2rem;
+        background: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    .metric-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .metric-change {
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        height: 400px;
+    }
+
+    .security-score {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .score-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: white;
+        margin: 0 auto 1rem;
+    }
+
+    .score-excellent { background: linear-gradient(135deg, #198754, #20c997); }
+    .score-good { background: linear-gradient(135deg, #0d6efd, #6f42c1); }
+    .score-warning { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+    .score-danger { background: linear-gradient(135deg, #dc3545, #e83e8c); }
+
+    .event-timeline {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .event-item {
+        padding: 1rem;
+        border-left: 4px solid #e9ecef;
+        margin-bottom: 1rem;
+        background: white;
+        border-radius: 0 8px 8px 0;
+        transition: all 0.2s ease;
+    }
+
+    .event-item:hover {
+        background: #f8f9fa;
+        border-left-color: var(--primary-color);
+    }
+
+    .event-security { border-left-color: var(--danger-color); }
+    .event-sharing { border-left-color: var(--info-color); }
+    .event-quality { border-left-color: var(--success-color); }
+    .event-project { border-left-color: var(--warning-color); }
+
+    .event-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-right: 1rem;
+    }
+
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary-color), #6f42c1);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .refresh-indicator {
+        display: none;
+        color: var(--success-color);
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .trend-up { color: var(--success-color); }
+    .trend-down { color: var(--danger-color); }
+    .trend-neutral { color: var(--info-color); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-0">
+                    <i class="fas fa-clipboard-check me-3"></i>
+                    {% trans "Research Platform Compliance Dashboard" %}
+                </h1>
+                <p class="mb-0 mt-2 opacity-75">
+                    {% trans "Real-time monitoring and audit trail visualization" %}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button id="refreshBtn" class="btn btn-light btn-lg">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    {% trans "Refresh Data" %}
+                </button>
+                <span class="refresh-indicator ms-2">
+                    <i class="fas fa-check-circle"></i> {% trans "Updated" %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Row -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="metric-card">
+                <div class="metric-value text-primary">{{ metrics.total_events|intcomma }}</div>
+                <div class="metric-label">{% trans "Total Events" %}</div>
+                <div class="metric-change trend-up">
+                    <i class="fas fa-arrow-up me-1"></i>
+                    {{ metrics.events_24h }} {% trans "in last 24h" %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="metric-card">
+                <div class="metric-value text-success">{{ metrics.security_events|intcomma }}</div>
+                <div class="metric-label">{% trans "Security Events" %}</div>
+                <div class="metric-change trend-neutral">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    {% trans "Security monitoring" %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="metric-card">
+                <div class="metric-value text-info">{{ metrics.sharing_events|intcomma }}</div>
+                <div class="metric-label">{% trans "Sharing Events" %}</div>
+                <div class="metric-change trend-up">
+                    <i class="fas fa-share-alt me-1"></i>
+                    {{ sharing_analytics.total_accesses }} {% trans "total accesses" %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="metric-card">
+                <div class="metric-value text-warning">{{ metrics.quality_events|intcomma }}</div>
+                <div class="metric-label">{% trans "Quality Events" %}</div>
+                <div class="metric-change trend-up">
+                    <i class="fas fa-check-circle me-1"></i>
+                    {% trans "Quality assurance" %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Analytics Row -->
+    <div class="row mb-4">
+        <div class="col-md-8 mb-3">
+            <div class="chart-container">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-line me-2"></i>
+                    {% trans "Event Timeline (Last 7 Days)" %}
+                </h5>
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="chart-container">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    {% trans "Event Categories" %}
+                </h5>
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security and Quality Row -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="metric-card security-score">
+                <h5 class="mb-3">{% trans "Security Compliance Score" %}</h5>
+                <div class="score-circle {% if security_summary.security_score >= 90 %}score-excellent{% elif security_summary.security_score >= 75 %}score-good{% elif security_summary.security_score >= 50 %}score-warning{% else %}score-danger{% endif %}">
+                    {{ security_summary.security_score }}%
+                </div>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="fw-bold">{{ security_summary.active_shares }}</div>
+                        <small class="text-muted">{% trans "Active Shares" %}</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="fw-bold">{{ security_summary.total_share_accesses }}</div>
+                        <small class="text-muted">{% trans "Total Accesses" %}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="metric-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-database me-2"></i>
+                    {% trans "Data Quality Status" %}
+                </h5>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{% trans "Projects Quality" %}</span>
+                        <span class="fw-bold">{{ data_quality_status.projects_quality_score|floatformat:1 }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: {{ data_quality_status.projects_quality_score }}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{% trans "Data Completeness" %}</span>
+                        <span class="fw-bold">{{ data_quality_status.data_completeness|floatformat:1 }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" style="width: {{ data_quality_status.data_completeness }}%"></div>
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="fw-bold">{{ data_quality_status.total_projects }}</div>
+                        <small class="text-muted">{% trans "Projects" %}</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-bold">{{ data_quality_status.total_studies }}</div>
+                        <small class="text-muted">{% trans "Studies" %}</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-bold">{{ data_quality_status.total_datasets }}</div>
+                        <small class="text-muted">{% trans "Datasets" %}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="metric-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-share-alt me-2"></i>
+                    {% trans "Sharing Analytics" %}
+                </h5>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>{% trans "Total Shares" %}</span>
+                        <span class="fw-bold">{{ sharing_analytics.total_shares }}</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>{% trans "Avg Accesses" %}</span>
+                        <span class="fw-bold">{{ sharing_analytics.avg_accesses_per_share|floatformat:1 }}</span>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">{% trans "Most accessed documents:" %}</small>
+                    {% for doc, count in sharing_analytics.top_documents.items %}
+                        <div class="d-flex justify-content-between mt-1">
+                            <small class="text-truncate me-2">{{ doc|truncatechars:20 }}</small>
+                            <small class="fw-bold">{{ count }}</small>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Events Timeline -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-clock me-2"></i>
+                    {% trans "Recent Audit Events" %}
+                    <span class="status-badge bg-success ms-2">
+                        {% trans "Live" %}
+                    </span>
+                </h5>
+                <div class="event-timeline">
+                    {% for event in recent_events %}
+                    <div class="event-item event-{{ event.category|lower }}">
+                        <div class="d-flex align-items-start">
+                                                     <div class="event-icon" style="background-color: #6c757d;">
+                             <i class="{{ event.icon }}"></i>
+                         </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="fw-bold">{{ event.label }}</div>
+                                        <div class="text-muted small">
+                                            {% if event.actor %}
+                                                {% trans "by" %} {{ event.actor }}
+                                            {% endif %}
+                                            {% if event.target %}
+                                                → {{ event.target|truncatechars:30 }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="small text-muted">
+                                            {{ event.timestamp|timesince }} {% trans "ago" %}
+                                        </div>
+                                        <span class="status-badge bg-{{ event.category|lower }}">
+                                            {{ event.category }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-info-circle fa-2x mb-2"></i>
+                        <div>{% trans "No recent events found" %}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Charts and Real-time Updates -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Timeline Chart
+    const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+    const timelineChart = new Chart(timelineCtx, {
+        type: 'line',
+        data: {
+            labels: [], // Will be populated via API
+            datasets: [{
+                label: '{% trans "Events per Day" %}',
+                data: [],
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Category Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    const categoryChart = new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: [
+                    '#0d6efd', '#198754', '#ffc107', '#dc3545',
+                    '#0dcaf0', '#6f42c1', '#fd7e14', '#20c997'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Load chart data
+    function loadChartData() {
+        // Timeline data
+        fetch('/research/compliance/api/?type=events_timeline')
+            .then(response => response.json())
+            .then(data => {
+                timelineChart.data.labels = data.labels;
+                timelineChart.data.datasets[0].data = data.data;
+                timelineChart.update();
+            });
+
+        // Category data
+        fetch('/research/compliance/api/?type=category_breakdown')
+            .then(response => response.json())
+            .then(data => {
+                categoryChart.data.labels = data.labels;
+                categoryChart.data.datasets[0].data = data.data;
+                categoryChart.update();
+            });
+    }
+
+    // Refresh button functionality
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        const btn = this;
+        const indicator = document.querySelector('.refresh-indicator');
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Refreshing..." %}';
+        
+        loadChartData();
+        
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>{% trans "Refresh Data" %}';
+            indicator.style.display = 'inline';
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 3000);
+        }, 1000);
+    });
+
+    // Auto-refresh every 30 seconds
+    setInterval(loadChartData, 30000);
+
+    // Initial load
+    loadChartData();
+});
+</script>
+{% endblock %} 

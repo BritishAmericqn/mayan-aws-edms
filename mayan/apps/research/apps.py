@@ -82,22 +82,5 @@ class ResearchApp(MayanAppConfig):
             logger.warning(f"Research app permissions setup warning: {e}")
             pass
 
-    def configure_urls(self):
-        # First call the parent method to register regular URLs under /research/
-        super().configure_urls()
-
-        # Then manually register passthru_urlpatterns at root level
-        try:
-            from django.urls import re_path, include
-            from mayan.urls import urlpatterns as mayan_urlpatterns
-            from .urls.urlpatterns import passthru_urlpatterns
-
-            # Add passthru_urlpatterns directly to root level
-            for pattern in passthru_urlpatterns:
-                mayan_urlpatterns.append(pattern)
-
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(name=__name__)
-            logger.warning(f"Research app URL configuration warning: {e}")
-            pass 
+    # Removed custom configure_urls method - using parent MayanAppConfig implementation
+    # which will automatically import from urls.py and register with namespace 

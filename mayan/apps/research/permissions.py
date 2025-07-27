@@ -100,24 +100,41 @@ permission_document_share_access = namespace.add_permission(
     label=_('Access shared documents'), name='document_share_access'
 )
 
-# Tasks 3.2-3.3: Enhanced sharing permissions
-permission_shared_document_create = namespace.add_permission(
-    label=_('Create shared documents'), name='shared_document_create'
+# Task 3.6: Report permissions (enhanced)
+permission_report_create = namespace.add_permission(
+    label=_('Create reports'), name='report_create'
 )
-permission_shared_document_view = namespace.add_permission(
-    label=_('View shared documents'), name='shared_document_view'
+permission_report_view = namespace.add_permission(
+    label=_('View reports'), name='report_view'
 )
-permission_shared_document_edit = namespace.add_permission(
-    label=_('Edit shared documents'), name='shared_document_edit'
+permission_report_download = namespace.add_permission(
+    label=_('Download reports'), name='report_download'
 )
-permission_shared_document_delete = namespace.add_permission(
-    label=_('Delete shared documents'), name='shared_document_delete'
+permission_report_delete = namespace.add_permission(
+    label=_('Delete reports'), name='report_delete'
 )
 
-# Compliance and audit permissions (Tasks 3.4-3.6)
+# Tasks 3.2-3.3: Enhanced sharing permissions
+permission_shared_document_create = namespace.add_permission(
+    label=_('Create shared document'), name='shared_document_create'
+)
+permission_shared_document_view = namespace.add_permission(
+    label=_('View shared document'), name='shared_document_view'
+)
+permission_shared_document_edit = namespace.add_permission(
+    label=_('Edit shared document'), name='shared_document_edit'
+)
+permission_shared_document_delete = namespace.add_permission(
+    label=_('Delete shared document'), name='shared_document_delete'
+)
+
+# Compliance and audit permissions (Task 3.5)
 permission_compliance_dashboard_view = namespace.add_permission(
     label=_('View compliance dashboard'), name='compliance_dashboard_view'
 )
 permission_compliance_report_create = namespace.add_permission(
-    label=_('Create compliance reports'), name='compliance_report_create'
+    label=_('Create compliance report'), name='compliance_report_create'
+)
+permission_audit_trail_access = namespace.add_permission(
+    label=_('Access audit trail'), name='audit_trail_access'
 ) 

@@ -68,7 +68,7 @@ class DatasetDetailView(SingleObjectDetailView):
             'dataset': self.object,
             'study': self.object.study,
             'project': self.object.study.project,
-            'title': _('Dataset: %s') % self.object.name,
+            'title': _('Dataset: %s') % self.object.title,
             'hide_object': True,
             'list_as_items': True
         }

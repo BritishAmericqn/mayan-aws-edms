@@ -5,6 +5,7 @@ from mayan.apps.documents.models import Document
 from mayan.apps.forms import form_fields, form_widgets
 
 from .models import Dataset, Project, Study, DatasetDocument
+from .reports.models import ReportTemplate
 
 
 class ProjectForm(forms.ModelForm):
@@ -392,3 +393,149 @@ class DatasetDocumentForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance 
+
+# Tasks 3.2-3.3: Enhanced sharing permissions - MOVED TO permissions.py
+# Import permissions instead of defining them here
+from .permissions import (
+    permission_shared_document_create,
+    permission_shared_document_view, 
+    permission_shared_document_edit,
+    permission_shared_document_delete,
+    permission_compliance_dashboard_view,
+    permission_compliance_report_create,
+    permission_audit_trail_access,
+    permission_report_create,
+    permission_report_view,
+    permission_report_download,
+    permission_report_delete
+)
+
+# Task 3.6: PDF Report Generation Forms
+class ReportRequestForm(forms.Form):
+    """
+    Form for requesting PDF report generation.
+    Task 3.6: Professional report request interface.
+    """
+    
+    REPORT_TYPE_CHOICES = [
+        ('compliance', _('Compliance Report - Security and audit analysis')),
+        ('research_summary', _('Research Summary - Project overview and statistics')),
+        ('audit_trail', _('Audit Trail - Detailed event history')),
+        ('security_analysis', _('Security Analysis - Access and sharing metrics')),
+    ]
+    
+    TIME_RANGE_CHOICES = [
+        ('7', _('Last 7 days')),
+        ('30', _('Last 30 days')),
+        ('90', _('Last 90 days')),
+        ('365', _('Last year')),
+    ]
+    
+    report_type = forms.ChoiceField(
+        choices=REPORT_TYPE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label=_('Report Type'),
+        help_text=_('Select the type of report to generate')
+    )
+    
+    title = forms.CharField(
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('Auto-generated if empty')}),
+        label=_('Report Title'),
+        help_text=_('Custom title for the report (optional)')
+    )
+    
+    time_range_days = forms.ChoiceField(
+        choices=TIME_RANGE_CHOICES,
+        initial='30',
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label=_('Time Range'),
+        help_text=_('Period to include in the report')
+    )
+    
+    project = forms.ModelChoiceField(
+        queryset=Project.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label=_('Specific Project'),
+        help_text=_('Include only this project (for research summaries)')
+    )
+    
+    include_charts = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        label=_('Include Charts'),
+        help_text=_('Add visual charts and graphs to the report')
+    )
+    
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        self.project = kwargs.pop('project', None)
+        super().__init__(*args, **kwargs)
+        
+        # If a specific project is provided, filter and set default
+        if self.project:
+            self.fields['project'].initial = self.project
+            self.fields['project'].widget.attrs['disabled'] = True
+        
+        # Filter projects by user permissions if needed
+        if self.user and hasattr(self.user, 'accessible_projects'):
+            self.fields['project'].queryset = self.user.accessible_projects.all()
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        report_type = cleaned_data.get('report_type')
+        project = cleaned_data.get('project')
+        
+        # Validate project requirement for research summaries
+        if report_type == 'research_summary' and not project:
+            raise forms.ValidationError(_('A project must be selected for research summary reports.'))
+        
+        return cleaned_data
+    
+    def get_parameters(self):
+        """Get parameters dict for report generation."""
+        params = {
+            'time_range_days': int(self.cleaned_data['time_range_days']),
+            'include_charts': self.cleaned_data['include_charts'],
+        }
+        
+        if self.cleaned_data.get('project'):
+            params['project_id'] = self.cleaned_data['project'].id
+        
+        return params
+
+
+class ReportTemplateForm(forms.ModelForm):
+    """
+    Form for creating reusable report templates.
+    Task 3.6: Template management for repeated report generation.
+    """
+    
+    class Meta:
+        model = ReportTemplate
+        fields = ['name', 'report_type', 'description', 'default_parameters', 'is_public']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'report_type': forms.Select(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'default_parameters': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+            'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # Add help text
+        self.fields['default_parameters'].help_text = _('JSON format: {"time_range_days": 30, "project_id": 1}')
+    
+    def save(self, commit=True):
+        template = super().save(commit=False)
+        if self.user:
+            template.created_by = self.user
+        if commit:
+            template.save()
+        return template 

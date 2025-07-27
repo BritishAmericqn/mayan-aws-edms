@@ -1,0 +1,158 @@
+{% extends 'appearance/base.html' %}
+
+{% load i18n %}
+{% load appearance_tags %}
+
+{% block title %}{% trans "Report List" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-list"></i> {% trans "Report History" %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Demo Notice -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>{% trans "Demo Mode:" %}</strong> Report history will be available after database migrations. Currently showing demo interface.
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-primary">0</h3>
+                                    <p class="mb-0">{% trans "Total Reports" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-success">0</h3>
+                                    <p class="mb-0">{% trans "Completed" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-warning">0</h3>
+                                    <p class="mb-0">{% trans "Processing" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-danger">0</h3>
+                                    <p class="mb-0">{% trans "Failed" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report List -->
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">{% trans "Generated Reports" %}</h5>
+                            <a href="/research/reports/" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> {% trans "Generate New Report" %}
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% comment %} When reports exist, they'll be displayed here {% endcomment %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-file-pdf fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">{% trans "No Reports Generated Yet" %}</h5>
+                                <p class="text-muted">{% trans "Reports will appear here once database migrations are completed and reports are generated." %}</p>
+                                
+                                <!-- Demo Report Examples -->
+                                <div class="mt-4">
+                                    <h6>{% trans "Demo Report Examples:" %}</h6>
+                                    <div class="row justify-content-center">
+                                        <div class="col-md-8">
+                                            <div class="list-group">
+                                                <div class="list-group-item">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-1"><i class="fas fa-clipboard-check text-success"></i> Compliance Report 2024</h6>
+                                                            <p class="mb-1 text-muted">Security and compliance analysis report</p>
+                                                            <small class="text-muted">Generated: Demo Mode</small>
+                                                        </div>
+                                                        <div>
+                                                            <span class="badge bg-success">Completed</span>
+                                                            <button class="btn btn-sm btn-outline-primary ms-2" disabled>
+                                                                <i class="fas fa-download"></i> Download
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="list-group-item">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-1"><i class="fas fa-microscope text-info"></i> Research Summary Q4 2024</h6>
+                                                            <p class="mb-1 text-muted">Comprehensive overview of research projects</p>
+                                                            <small class="text-muted">Generated: Demo Mode</small>
+                                                        </div>
+                                                        <div>
+                                                            <span class="badge bg-success">Completed</span>
+                                                            <button class="btn btn-sm btn-outline-primary ms-2" disabled>
+                                                                <i class="fas fa-download"></i> Download
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="list-group-item">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-1"><i class="fas fa-history text-primary"></i> Audit Trail Report</h6>
+                                                            <p class="mb-1 text-muted">Complete system activity and security audit</p>
+                                                            <small class="text-muted">Generated: Demo Mode</small>
+                                                        </div>
+                                                        <div>
+                                                            <span class="badge bg-success">Completed</span>
+                                                            <button class="btn btn-sm btn-outline-primary ms-2" disabled>
+                                                                <i class="fas fa-download"></i> Download
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <div class="btn-group" role="group">
+                                <a href="/research/reports/" class="btn btn-primary">
+                                    <i class="fas fa-file-pdf"></i> {% trans "Generate Reports" %}
+                                </a>
+                                <a href="/research/compliance/dashboard/" class="btn btn-success">
+                                    <i class="fas fa-chart-dashboard"></i> {% trans "Compliance Dashboard" %}
+                                </a>
+                                <a href="/admin/research/" class="btn btn-info">
+                                    <i class="fas fa-cog"></i> {% trans "Admin Interface" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

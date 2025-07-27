@@ -10,6 +10,12 @@ from ..views import (
 # Tasks 3.2-3.3: Import sharing and public views
 from ..views import sharing_views, public_views
 
+# Task 3.5: Compliance dashboard URLs
+from ..views import compliance_views
+
+# Task 3.6: PDF Report URLs
+from ..views import report_views
+
 urlpatterns = [
     # Project URLs
     re_path(
@@ -64,7 +70,7 @@ urlpatterns = [
         view=StudyDeleteView.as_view(),
         name='study_delete'
     ),
-
+    
     # Dataset URLs
     re_path(
         route=r'^studies/(?P<study_id>\d+)/datasets/$',
@@ -90,6 +96,71 @@ urlpatterns = [
         route=r'^datasets/(?P<dataset_id>\d+)/delete/$',
         view=DatasetDeleteView.as_view(),
         name='dataset_delete'
+    ),
+
+    # Task 3.5: Compliance dashboard URLs
+    re_path(
+        route=r'^compliance/dashboard/$',
+        view=compliance_views.ComplianceDashboardView.as_view(),
+        name='compliance_dashboard'
+    ),
+    re_path(
+        route=r'^compliance/api/$',
+        view=compliance_views.ComplianceAPIView.as_view(),
+        name='compliance_api'
+    ),
+
+    # Task 3.6: PDF Report URLs
+    re_path(
+        route=r'^reports/$',
+        view=report_views.ReportDashboardView.as_view(),
+        name='report_dashboard'
+    ),
+    re_path(
+        route=r'^reports/request/$',
+        view=report_views.ReportRequestView.as_view(),
+        name='report_request'
+    ),
+    re_path(
+        route=r'^reports/list/$',
+        view=report_views.ReportListView.as_view(),
+        name='report_list'
+    ),
+    
+    # Individual report management
+    re_path(
+        route=r'^reports/(?P<report_id>\d+)/$',
+        view=report_views.ReportDetailView.as_view(),
+        name='report_detail'
+    ),
+    re_path(
+        route=r'^reports/(?P<report_id>\d+)/download/$',
+        view=report_views.ReportDownloadView.as_view(),
+        name='report_download'
+    ),
+    re_path(
+        route=r'^reports/(?P<report_id>\d+)/delete/$',
+        view=report_views.ReportDeleteView.as_view(),
+        name='report_delete'
+    ),
+    
+    # AJAX and API endpoints
+    re_path(
+        route=r'^reports/quick-generate/$',
+        view=report_views.QuickReportView.as_view(),
+        name='report_quick_generate'
+    ),
+    re_path(
+        route=r'^reports/(?P<report_id>\d+)/status/$',
+        view=report_views.ReportStatusAPIView.as_view(),
+        name='report_status_api'
+    ),
+    
+    # Project-specific reports
+    re_path(
+        route=r'^projects/(?P<project_id>\d+)/report/$',
+        view=report_views.ProjectReportView.as_view(),
+        name='project_report'
     ),
     
     # Tasks 3.2-3.3: Sharing URLs (authenticated users only)
@@ -138,3 +209,73 @@ passthru_urlpatterns = [
         name='shared_document_preview'
     ),
 ] 
+
+# Task 3.5: Compliance dashboard URLs
+urlpatterns.extend([
+    re_path(
+        route=r'^compliance/dashboard/$',
+        view=compliance_views.ComplianceDashboardView.as_view(),
+        name='compliance_dashboard'
+    ),
+    re_path(
+        route=r'^compliance/api/$',
+        view=compliance_views.ComplianceAPIView.as_view(),
+        name='compliance_api'
+    ),
+])
+
+# Task 3.6: PDF Report URLs
+urlpatterns.extend([
+    # Report dashboard and management
+    re_path(
+        route=r'^reports/$',
+        view=report_views.ReportDashboardView.as_view(),
+        name='report_dashboard'
+    ),
+    re_path(
+        route=r'^reports/request/$',
+        view=report_views.ReportRequestView.as_view(),
+        name='report_request'
+    ),
+    re_path(
+        route=r'^reports/list/$',
+        view=report_views.ReportListView.as_view(),
+        name='report_list'
+    ),
+    
+    # Individual report management
+    re_path(
+        route=r'^reports/(?P<report_id>\d+)/$',
+        view=report_views.ReportDetailView.as_view(),
+        name='report_detail'
+    ),
+    re_path(
+        route=r'^reports/(?P<report_id>\d+)/download/$',
+        view=report_views.ReportDownloadView.as_view(),
+        name='report_download'
+    ),
+    re_path(
+        route=r'^reports/(?P<report_id>\d+)/delete/$',
+        view=report_views.ReportDeleteView.as_view(),
+        name='report_delete'
+    ),
+    
+    # AJAX and API endpoints
+    re_path(
+        route=r'^reports/quick-generate/$',
+        view=report_views.QuickReportView.as_view(),
+        name='report_quick_generate'
+    ),
+    re_path(
+        route=r'^reports/(?P<report_id>\d+)/status/$',
+        view=report_views.ReportStatusAPIView.as_view(),
+        name='report_status_api'
+    ),
+    
+    # Project-specific reports
+    re_path(
+        route=r'^projects/(?P<project_id>\d+)/report/$',
+        view=report_views.ProjectReportView.as_view(),
+        name='project_report'
+    ),
+]) 

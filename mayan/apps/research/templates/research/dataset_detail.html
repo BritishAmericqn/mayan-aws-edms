@@ -8,7 +8,6 @@
 
 {% block stylesheets %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'research/css/research.css' %}">
     <style>
         /* Professional styling for demo presentation */
         .chart-container {
@@ -364,7 +363,7 @@
                                     <div class="row">
                                         {% for metric_key, metric_value in dataset.analysis_results.demo_highlights.key_metrics.items %}
                                             <div class="col-md-6 mb-3">
-                                                <strong>{{ metric_key|title|replace:"_"," " }}:</strong><br>
+                                                <strong>{{ metric_key|title }}:</strong><br>
                                                 <span class="text-primary">{{ metric_value }}</span>
                                             </div>
                                         {% endfor %}

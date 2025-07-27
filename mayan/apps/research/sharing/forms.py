@@ -4,154 +4,123 @@ from django.utils.translation import gettext_lazy as _
 from datetime import timedelta
 
 from mayan.apps.documents.models import Document
-from mayan.apps.forms import form_fields, form_widgets
-
 from .models import SharedDocument
 
 
 class ShareDocumentForm(forms.ModelForm):
-    """
-    Professional form for creating secure document shares.
-    Task 3.2: Sharing Forms & Views with demo-optimized UX.
-    """
+    """Main form for creating document shares with comprehensive options"""
     
-    # Expiration options for demo (1hr, 1day, 1week)
-    EXPIRATION_CHOICES = (
-        (1, _('1 Hour')),
-        (24, _('1 Day')),
-        (168, _('1 Week')),
-        (720, _('1 Month')),  # For extended demo scenarios
-    )
+    EXPIRATION_CHOICES = [
+        (1, _('1 hour')),
+        (24, _('1 day')),
+        (168, _('1 week')),
+        (720, _('1 month')),
+        (0, _('Never expires')),
+    ]
     
     expiration_hours = forms.ChoiceField(
         choices=EXPIRATION_CHOICES,
-        initial=24,  # Default to 1 day
-        widget=forms.Select(attrs={
-            'class': 'form-control select2'
-        }),
-        label=_('Expires In'),
-        help_text=_('How long the sharing link will remain active')
+        initial=24,
+        label=_('Link expires in'),
+        help_text=_('How long the sharing link will remain valid')
+    )
+    
+    max_access_count = forms.IntegerField(
+        initial=10,
+        min_value=1,
+        max_value=1000,
+        label=_('Maximum downloads'),
+        help_text=_('Maximum number of times this document can be downloaded')
     )
     
     class Meta:
         model = SharedDocument
-        fields = ('label', 'expiration_hours')
+        fields = ['document', 'label', 'expiration_hours', 'max_access_count']
         widgets = {
+            'document': forms.Select(attrs={'class': 'form-select'}),
             'label': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': _('e.g., Shared for Review - Dr. Smith')
-            })
+                'placeholder': _('Enter a description for this share...')
+            }),
         }
-
-    def __init__(self, *args, **kwargs):
-        self.document = kwargs.pop('document', None)
-        self.user = kwargs.pop('user', None)
+    
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user = user
         
-        # Enhanced help text for demo
-        self.fields['label'].help_text = _(
-            'Descriptive label to identify this share (visible in audit logs)'
-        )
-        
-        # Auto-populate label if document is provided
-        if self.document and not self.initial.get('label'):
-            self.fields['label'].initial = f'Shared: {self.document.label}'
-
-    def clean(self):
-        cleaned_data = super().clean()
-        
-        # Validate document is provided
-        if not self.document:
-            raise forms.ValidationError(_('Document is required for sharing'))
-        
-        # Validate user permissions (would be more complex in production)
-        if not self.user:
-            raise forms.ValidationError(_('User is required for sharing'))
-            
-        return cleaned_data
-
+        # Filter documents the user can access
+        if user:
+            # In a real implementation, filter by user permissions
+            self.fields['document'].queryset = Document.objects.all()
+    
     def save(self, commit=True):
         instance = super().save(commit=False)
         
-        # Set required fields
-        instance.document = self.document
-        instance.created_by = self.user
+        # Set created_by
+        if self.user:
+            instance.created_by = self.user
         
-        # Calculate expiration time
+        # Calculate expiration based on selected hours
         expiration_hours = int(self.cleaned_data['expiration_hours'])
-        instance.expires_at = timezone.now() + timedelta(hours=expiration_hours)
+        if expiration_hours > 0:
+            instance.expires_at = timezone.now() + timedelta(hours=expiration_hours)
+        else:
+            # Never expires - set to far future
+            instance.expires_at = timezone.now() + timedelta(days=3650)  # 10 years
         
         if commit:
             instance.save()
-            
         return instance
 
 
 class QuickShareForm(forms.Form):
-    """
-    Quick sharing form for modal popup - minimal fields for fast demo.
-    Task 3.2: Modal integration with copy-to-clipboard functionality.
-    """
+    """Simplified form for quick sharing via modal"""
     
-    QUICK_EXPIRATION_CHOICES = (
-        (1, _('1 Hour - Urgent')),
-        (24, _('1 Day - Standard')),
-        (168, _('1 Week - Extended')),
-    )
-    
+    document_id = forms.IntegerField(widget=forms.HiddenInput())
     expiration_hours = forms.ChoiceField(
-        choices=QUICK_EXPIRATION_CHOICES,
+        choices=ShareDocumentForm.EXPIRATION_CHOICES,
         initial=24,
-        widget=forms.Select(attrs={
-            'class': 'form-control'
-        }),
-        label=_('Share Duration')
+        label=_('Expires in'),
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    max_access_count = forms.IntegerField(
+        initial=5,
+        min_value=1,
+        max_value=100,
+        label=_('Max downloads'),
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
     
-    send_notification = forms.BooleanField(
-        required=False,
-        initial=False,
-        widget=forms.CheckboxInput(attrs={
-            'class': 'form-check-input'
-        }),
-        label=_('Log Access (Compliance)'),
-        help_text=_('Track when the shared document is accessed')
-    )
-
-    def __init__(self, *args, **kwargs):
-        self.document = kwargs.pop('document', None)
-        self.user = kwargs.pop('user', None)
+    def __init__(self, *args, document=None, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-
+        self.document = document
+        self.user = user
+        
+        if document:
+            self.fields['document_id'].initial = document.id
+    
     def create_share(self):
-        """Create the shared document and return URL info."""
+        """Create a SharedDocument from form data"""
         if not self.is_valid():
             return None
-            
-        # Create SharedDocument
-        expiration_hours = int(self.cleaned_data['expiration_hours'])
-        expires_at = timezone.now() + timedelta(hours=expiration_hours)
         
+        # Auto-generate label
+        label = f"Quick share of {self.document.label}" if self.document else "Quick share"
+        
+        # Calculate expiration
+        expiration_hours = int(self.cleaned_data['expiration_hours'])
+        if expiration_hours > 0:
+            expires_at = timezone.now() + timedelta(hours=expiration_hours)
+        else:
+            expires_at = timezone.now() + timedelta(days=3650)
+        
+        # Create shared document
         shared_doc = SharedDocument.objects.create(
             document=self.document,
+            label=label,
             created_by=self.user,
-            label=f'Quick Share: {self.document.label}',
-            expires_at=expires_at
+            expires_at=expires_at,
+            max_access_count=self.cleaned_data['max_access_count']
         )
         
-        # Generate URL using the generator
-        from .generators import PreSignedURLGenerator
-        generator = PreSignedURLGenerator()
-        
-        url_info = generator.generate_url(
-            document=self.document,
-            expiration_hours=expiration_hours,
-            shared_document=shared_doc
-        )
-        
-        return {
-            'shared_document': shared_doc,
-            'url_info': url_info,
-            'demo_ready': True,
-            'compliance_tracking': self.cleaned_data['send_notification']
-        } 
+        return shared_doc 
