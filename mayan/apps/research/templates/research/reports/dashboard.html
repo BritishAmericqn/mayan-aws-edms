@@ -5,6 +5,8 @@
 
 {% block title %}{{ page_title }}{% endblock %}
 
+{% csrf_token %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row">
@@ -82,11 +84,18 @@
                                                         {% trans "Security analysis and risk assessment reports" %}
                                                     {% endif %}
                                                 </p>
-                                                <button class="btn btn-sm btn-primary demo-report-btn" 
-                                                        data-report-type="{{ report_type.value }}"
-                                                        data-report-name="{{ report_type.label }}">
-                                                    <i class="fas fa-file-pdf"></i> {% trans "Generate Demo Report" %}
-                                                </button>
+                                                <div class="btn-group w-100" role="group">
+                                                    <button class="btn btn-sm btn-success real-report-btn" 
+                                                            data-report-type="{{ report_type.value }}"
+                                                            data-report-name="{{ report_type.label }}">
+                                                        <i class="fas fa-file-pdf"></i> {% trans "Generate PDF" %}
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-primary demo-report-btn" 
+                                                            data-report-type="{{ report_type.value }}"
+                                                            data-report-name="{{ report_type.label }}">
+                                                        <i class="fas fa-eye"></i> {% trans "Preview" %}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                         {% endfor %}
@@ -204,6 +213,71 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('reportContent').innerHTML = generateDemoReportContent(reportType);
             
             demoModal.show();
+        });
+    });
+    
+    // Real report generation
+    const realReportBtns = document.querySelectorAll('.real-report-btn');
+    
+    realReportBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const reportType = this.getAttribute('data-report-type');
+            const reportName = this.getAttribute('data-report-name');
+            const originalText = this.innerHTML;
+            
+            // Show loading state
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            
+            // Make POST request to generate real report
+            fetch('/research/reports/quick-generate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: new URLSearchParams({
+                    'report_type': reportType,
+                    'time_range': '30'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.disabled = false;
+                this.innerHTML = originalText;
+                
+                if (data.status === 'success') {
+                    // Show success message
+                    const alertHtml = `
+                        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                            <i class="fas fa-check-circle"></i> ${reportName} generated successfully! Report ID: ${data.report_id}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    `;
+                    document.querySelector('.card-body').insertAdjacentHTML('afterbegin', alertHtml);
+                } else {
+                    // Show error message
+                    const alertHtml = `
+                        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> Error: ${data.message || 'Failed to generate report'}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    `;
+                    document.querySelector('.card-body').insertAdjacentHTML('afterbegin', alertHtml);
+                }
+            })
+            .catch(error => {
+                this.disabled = false;
+                this.innerHTML = originalText;
+                
+                const alertHtml = `
+                    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                        <i class="fas fa-exclamation-circle"></i> Network error: ${error.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                document.querySelector('.card-body').insertAdjacentHTML('afterbegin', alertHtml);
+            });
         });
     });
     
